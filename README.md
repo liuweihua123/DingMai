@@ -43,13 +43,13 @@
 ![用户中心](docs/screenshots/06-user.png)
 
 ### 💳 积分充值
-![积分充值](docs/screenshots/07-points.png)
+![积分充值](docs/screenshots/07-points.png?v=2)
 
 ### 📝 发布资源
-![发布资源](docs/screenshots/08-publish.png)
+![发布资源](docs/screenshots/08-publish.png?v=2)
 
 ### ⚙️ 后台管理
-![后台管理](docs/screenshots/09-admin.png)
+![后台管理](docs/screenshots/09-admin.png?v=2)
 
 ---
 
