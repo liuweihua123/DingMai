@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>发布资源 — 鼎脉人脉</title>
+  <link rel="icon" type="image/png" href="assets/icons8-teapot-material-outlined-32.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .publish-page {
+      padding-top: calc(var(--nav-height) + var(--space-2xl));
+      padding-bottom: var(--space-4xl);
+      position: relative;
+      z-index: 1;
+    }
+    .publish-card {
+      max-width: 700px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+    }
+    .publish-card::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark));
+      margin: calc(var(--space-2xl) * -1) calc(var(--space-2xl) * -1) var(--space-xl);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    textarea.form-input { min-height: 100px; resize: vertical; }
+    .tip-box {
+      background: rgba(201,169,110,0.06);
+      border: 1px solid rgba(201,169,110,0.12);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      margin-bottom: var(--space-xl);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .tip-box strong { color: var(--gold); }
+    @media(max-width:768px) { .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="publish-page">
+    <div class="container container--narrow">
+      <div class="page-header animate-fade-in-up" style="margin-bottom:var(--space-xl)">
+        <h1 class="page-header__title">发布人脉资源</h1>
+        <p class="page-header__subtitle">分享您的人脉资源，审核通过后即可在平台展示</p>
+      </div>
+
+      <div class="publish-card animate-fade-in-up delay-1">
+        <div class="tip-box">
+          📌 <strong>发布须知：</strong><br>
+          · 提交后需管理员审核，通过后才会在前台展示<br>
+          · 联系方式请填写真实有效的信息<br>
+          · 积分价格由您自行设定，平台不收取费用<br>
+          · 请勿发布虚假或违规信息
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">资源标题 *</label>
+          <input type="text" class="form-input" id="pub-title" placeholder="如：某知名投资机构合伙人">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">行业分类 *</label>
+            <select class="form-input" id="pub-category"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">所在地区 *</label>
+            <input type="text" class="form-input" id="pub-region" placeholder="如：北京">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">积分价格 *</label>
+          <input type="number" class="form-input" id="pub-price" placeholder="设置查看联系方式需要的积分（建议10-100）" min="1">
+          <div style="font-size:12px;color:var(--text-dim);margin-top:4px">其他用户消耗此积分可查看完整联系方式</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">图片URL（选填）</label>
+          <input type="text" class="form-input" id="pub-image" placeholder="https://example.com/image.jpg">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">资源介绍 *</label>
+          <div style="margin-bottom:var(--space-sm)">
+            <input type="file" id="pub-img-input" accept="image/*" style="display:none" onchange="uploadPubImg(this)">
+            <button type="button" class="btn btn--ghost btn--sm" onclick="document.getElementById('pub-img-input').click()">📷 上传图片插入</button>
+            <span id="upload-status" style="font-size:12px;color:var(--text-dim);margin-left:var(--space-sm)"></span>
+          </div>
+          <textarea class="form-input" id="pub-intro" placeholder="详细介绍此人脉资源的背景、能力、成就等（支持HTML和图片）"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">联系方式 *</label>
+          <textarea class="form-input" id="pub-contact" placeholder="姓名、手机、邮箱、微信号等（用户消耗积分后可查看）" style="min-height:80px"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">标签（逗号分隔）</label>
+          <input type="text" class="form-input" id="pub-tags" placeholder="如：风投,合伙人,TMT">
+        </div>
+
+        <div id="pub-error" class="form-error" style="display:none;margin-bottom:var(--space-md)"></div>
+
+        <button class="btn btn--primary btn--block btn--lg" onclick="submitResource()" id="submit-btn">提交审核</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    if (!Club.auth.requireAuth()) throw new Error('Not logged in');
+    Club.initPage('');
+
+    const editId = new URLSearchParams(window.location.search).get('edit');
+    let isEditMode = !!editId;
+
+    // 加载分类
+    (async () => {
+      const categories = await api.meta.getCategories();
+      document.getElementById('pub-category').innerHTML = categories.map(c =>
+        `<option value="${c.id}">${c.icon} ${c.name}</option>`
+      ).join('');
+
+      // 编辑模式：加载已有数据
+      if (isEditMode) {
+        try {
+          const r = await api.request(`/user/submissions/${editId}`);
+          document.getElementById('pub-title').value = r.title;
+          document.getElementById('pub-category').value = r.category;
+          document.getElementById('pub-region').value = r.region;
+          document.getElementById('pub-price').value = r.price;
+          document.getElementById('pub-image').value = r.image || '';
+          document.getElementById('pub-intro').value = r.intro;
+          document.getElementById('pub-contact').value = r.contact;
+          document.getElementById('pub-tags').value = r.tags.join(',');
+          document.getElementById('submit-btn').textContent = '重新提交审核';
+          document.querySelector('.page-header__title').textContent = '编辑资源';
+          document.querySelector('.page-header__subtitle').textContent = '修改后重新提交审核';
+        } catch (e) {
+          Club.toast('加载资源失败', 'error');
+        }
+      }
+    })();
+
+    // 上传图片
+    async function uploadPubImg(input) {
+      const file = input.files[0];
+      if (!file) return;
+      document.getElementById('upload-status').textContent = '⏳ 上传中...';
+      const textarea = document.getElementById('pub-intro');
+      const spinner = Club.showUploadSpinner(textarea.parentElement);
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('club_token') },
+          body: formData,
+        });
+        const data = await res.json();
+        Club.removeUploadSpinner(spinner);
+        if (data.success) {
+          const imgTag = '<img src="' + data.url + '" style="max-width:100%;border-radius:8px;margin:8px 0">';
+          const pos = textarea.selectionStart;
+          textarea.value = textarea.value.substring(0, pos) + '\n' + imgTag + '\n' + textarea.value.substring(pos);
+          document.getElementById('upload-status').textContent = '✅ 已插入';
+          setTimeout(() => document.getElementById('upload-status').textContent = '', 2000);
+        } else {
+          document.getElementById('upload-status').textContent = '❌ ' + (data.error || '上传失败');
+        }
+      } catch (e) {
+        document.getElementById('upload-status').textContent = '❌ 上传失败';
+      }
+      input.value = '';
+    }
+
+    // 提交资源
+    async function submitResource() {
+      const errorEl = document.getElementById('pub-error');
+      const btn = document.getElementById('submit-btn');
+      const body = {
+        title: document.getElementById('pub-title').value.trim(),
+        category: document.getElementById('pub-category').value,
+        region: document.getElementById('pub-region').value.trim(),
+        price: Math.round(Number(document.getElementById('pub-price').value)),
+        image: document.getElementById('pub-image').value.trim(),
+        intro: document.getElementById('pub-intro').value.trim(),
+        contact: document.getElementById('pub-contact').value.trim(),
+        tags: document.getElementById('pub-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      };
+
+      if (!body.title || !body.category || !body.region || !body.price || !body.intro || !body.contact) {
+        errorEl.textContent = '请填写所有必填项';
+        errorEl.style.display = '';
+        return;
+      }
+
+      await Club.btnLoading(btn, async () => {
+        try {
+          let result;
+          if (isEditMode) {
+            result = await api.request(`/user/submissions/${editId}`, {
+              method: 'PUT',
+              body: JSON.stringify(body),
+            });
+          } else {
+            result = await api.request('/user/submit', {
+              method: 'POST',
+              body: JSON.stringify(body),
+            });
+          }
+          if (result.success) {
+            Club.toast(isEditMode ? '修改成功！已重新提交审核' : '提交成功！等待管理员审核', 'success');
+            setTimeout(() => window.location.href = 'user.html', 1500);
+          }
+        } catch (err) {
+          errorEl.textContent = err.message || '提交失败';
+          errorEl.style.display = '';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# SQLite database & WAL
+club.db
+club.db-shm
+club.db-wal
+
+# User uploads
+uploads/*
+!uploads/.gitkeep
+
+# Secrets — copy from *.example.js after clone
+server/payment-config.js
+server/alipay.js
+server/alipay_private_key.pem
+server/alipay_public_key.pem
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*

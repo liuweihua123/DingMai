@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>社区论坛 — 鼎脉人脉</title>
+  <link rel="icon" type="image/png" href="assets/icons8-teapot-material-outlined-32.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .forum-page { padding-top: calc(var(--nav-height) + var(--space-xl)); padding-bottom: var(--space-4xl); position: relative; z-index: 1; }
+
+    /* Header */
+    .forum-hero {
+      background: linear-gradient(135deg, var(--gold-glow), transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-lg) var(--space-xl);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+    .forum-hero__left h1 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .forum-hero__left p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .forum-hero__stats {
+      display: flex;
+      gap: var(--space-xl);
+    }
+    .forum-hero__stat {
+      text-align: center;
+    }
+    .forum-hero__stat-num {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .forum-hero__stat-label {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Search */
+    .forum-search {
+      margin-bottom: var(--space-md);
+    }
+    .forum-search__wrap {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 4px 4px 4px 16px;
+      transition: border-color 0.3s;
+    }
+    .forum-search__wrap:focus-within {
+      border-color: var(--gold);
+    }
+    .forum-search__icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-right: var(--space-sm);
+    }
+    .forum-search__input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: var(--text-primary);
+      padding: 8px 0;
+      min-width: 0;
+    }
+    .forum-search__input::placeholder {
+      color: var(--text-dim);
+    }
+    .forum-search__btn {
+      padding: 8px 20px;
+      background: var(--gold);
+      color: var(--bg-primary);
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    .forum-search__btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Tabs + sort */
+    .forum-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+    .forum-pills {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 4px;
+    }
+    .forum-pill {
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      background: none;
+      white-space: nowrap;
+    }
+    .forum-pill:hover { color: var(--text-secondary); }
+    .forum-pill.active { background: var(--gold); color: var(--bg-primary); }
+
+    /* Post card */
+    .post-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md) var(--space-xl);
+      margin-bottom: var(--space-md);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+      display: flex;
+      gap: var(--space-lg);
+      align-items: flex-start;
+    }
+    .post-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      transform: translateX(4px);
+    }
+
+    .post-card__avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--bg-primary);
+      flex-shrink: 0;
+    }
+
+    .post-card__body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .post-card__top {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .post-card__author {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .post-card__level {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .post-card__time {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+
+    .post-card__title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      line-height: 1.4;
+      transition: color 0.3s;
+    }
+    .post-card:hover .post-card__title { color: var(--gold); }
+
+    .post-card__excerpt {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: var(--space-xs);
+    }
+
+    .post-card__footer {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+
+    .post-card__tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .post-card__tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 10px;
+      background: var(--gold-glow);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      color: var(--gold);
+    }
+
+    .post-card__stats {
+      display: flex;
+      gap: var(--space-md);
+      margin-left: auto;
+    }
+
+    .post-card__stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .post-card__stat svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* New post inline form */
+    .new-post-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-xl);
+      transition: border-color 0.3s;
+    }
+    .new-post-box:focus-within {
+      border-color: var(--border-hover);
+    }
+
+    .new-post-box__trigger {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .new-post-box__trigger:hover { color: var(--text-secondary); }
+
+    .new-post-box__avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-glass-light);
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .new-post-form {
+      display: none;
+    }
+    .new-post-form.active {
+      display: block;
+      animation: fadeInUp 0.3s var(--ease-out);
+    }
+
+    .new-post-form input,
+    .new-post-form textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+    }
+
+    .new-post-form__title {
+      font-size: 18px;
+      font-weight: 600;
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-md);
+    }
+    .new-post-form__title::placeholder { color: var(--text-dim); }
+
+    .new-post-form__tags {
+      font-size: 13px;
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-md);
+    }
+    .new-post-form__tags::placeholder { color: var(--text-dim); }
+
+    .new-post-form__content {
+      min-height: 120px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: var(--space-sm) var(--space-xs);
+      line-height: 1.8;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    .new-post-form__content:empty::before {
+      content: attr(data-placeholder);
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .new-post-form__content:focus {
+      outline: none;
+    }
+    .new-post-form__content img {
+      max-width: 100%;
+      border-radius: var(--radius-sm);
+      margin: var(--space-sm) 0;
+      vertical-align: middle;
+    }
+    .new-post-form__content p { margin: 0 0 4px; }
+
+    /* Editor toolbar */
+    .editor-toolbar {
+      display: flex;
+      gap: 2px;
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-sm);
+      flex-wrap: wrap;
+    }
+    .editor-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .editor-btn:hover {
+      background: var(--gold-glow);
+      color: var(--gold);
+    }
+    .editor-btn svg { width: 16px; height: 16px; }
+
+    .new-post-form__actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-md);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--border);
+    }
+
+    .new-post-form__tools {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .tool-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    .tool-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Sidebar */
+    .forum-layout { max-width: 100%; }
+    .sidebar-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-xl); }
+
+    /* Forum body layout */
+    .forum-body { display: flex; gap: var(--space-2xl); align-items: flex-start; }
+    .forum-main { flex: 1; min-width: 0; }
+    .forum-sidebar { width: 280px; flex-shrink: 0; position: sticky; top: calc(var(--nav-height) + var(--space-xl)); display: flex; flex-direction: column; gap: var(--space-lg); }
+
+    /* Mobile top cards - hidden on desktop */
+    .sidebar-top {
+      display: none;
+      margin-bottom: var(--space-xl);
+    }
+
+    @media(max-width:900px) {
+      .forum-sidebar { display: none; }
+      .sidebar-top { display: flex; gap: var(--space-lg); flex-wrap: wrap; }
+      .sidebar-top .sidebar-card { flex: 1; min-width: 240px; }
+      .forum-body { flex-direction: column; }
+    }
+    .sidebar-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-sm); }
+    .sidebar-title::before { content: ''; width: 3px; height: 14px; background: var(--gold); border-radius: 2px; }
+
+    .lb-item { display: flex; align-items: center; gap: var(--space-md); padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .lb-item:last-child { border-bottom: none; }
+    .lb-rank { font-family: var(--font-display); font-size: 16px; font-weight: 700; width: 24px; text-align: center; color: var(--text-dim); }
+    .lb-rank.top1 { color: #ffd700; }
+    .lb-rank.top2 { color: #c0c0c0; }
+    .lb-rank.top3 { color: #cd7f32; }
+    .lb-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--bg-primary); }
+    .lb-info { flex: 1; min-width: 0; }
+    .lb-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lb-exp { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+
+    /* Empty */
+    .forum-empty {
+      text-align: center;
+      padding: var(--space-4xl) var(--space-xl);
+      color: var(--text-dim);
+    }
+    .forum-empty__icon { font-size: 48px; margin-bottom: var(--space-md); opacity: 0.5; }
+    .forum-empty__text { font-size: 15px; margin-bottom: var(--space-lg); }
+
+    /* Pagination */
+    .pag { display: flex; justify-content: center; gap: var(--space-sm); margin-top: var(--space-xl); flex-wrap: wrap; }
+
+    /* Responsive */
+    @media(max-width:900px) {
+      .forum-hero { flex-direction: column; text-align: center; }
+      .forum-hero__stats { justify-content: center; }
+    }
+    @media(max-width:600px) {
+      .forum-page { padding-top: calc(var(--nav-height) + var(--space-md)); }
+      .forum-hero { padding: var(--space-md) var(--space-lg); border-radius: var(--radius-lg); }
+      .forum-hero__left h1 { font-size: 18px; }
+      .forum-hero__left p { font-size: 12px; }
+      .forum-hero__stat-num { font-size: 18px; }
+      .forum-controls { flex-direction: column; align-items: stretch; }
+      .forum-pills { justify-content: center; }
+      .forum-search__btn { padding: 8px 14px; font-size: 12px; }
+      .forum-search__input { font-size: 13px; }
+      .post-card { padding: var(--space-md); gap: var(--space-md); }
+      .post-card__avatar { width: 36px; height: 36px; font-size: 14px; }
+      .post-card__title { font-size: 15px; }
+      .post-card__excerpt { font-size: 12px; -webkit-line-clamp: 1; }
+      .post-card__stats { gap: var(--space-sm); }
+      .new-post-box { padding: var(--space-lg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="forum-page">
+    <div class="container">
+      <!-- Hero -->
+      <div class="forum-hero animate-fade-in-up">
+        <div class="forum-hero__left">
+          <h1>社区论坛</h1>
+          <p>分享交流，连接人脉，一起成长</p>
+        </div>
+        <div class="forum-hero__stats">
+          <div class="forum-hero__stat">
+            <div class="forum-hero__stat-num" id="stat-posts">0</div>
+            <div class="forum-hero__stat-label">帖子</div>
+          </div>
+          <div class="forum-hero__stat">
+            <div class="forum-hero__stat-num" id="stat-users">0</div>
+            <div class="forum-hero__stat-label">用户</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Post Box -->
+      <div class="new-post-box animate-fade-in-up delay-1" id="new-post-box">
+        <div class="new-post-box__trigger" id="np-trigger" onclick="openNewPost()">
+          <div class="new-post-box__avatar">✏️</div>
+          <span>说点什么，分享你的想法...</span>
+        </div>
+        <div class="new-post-form" id="np-form">
+          <input type="text" class="new-post-form__title" id="np-title" placeholder="标题">
+          <input type="text" class="new-post-form__tags" id="np-tags" placeholder="标签（逗号分隔，如：求助,分享,讨论）">
+          <!-- Rich Text Editor Toolbar -->
+          <div class="editor-toolbar">
+            <button type="button" class="editor-btn" onclick="execCmd('bold')" title="加粗"><b>B</b></button>
+            <button type="button" class="editor-btn" onclick="execCmd('italic')" title="斜体"><i>I</i></button>
+            <button type="button" class="editor-btn" onclick="execCmd('underline')" title="下划线"><u>U</u></button>
+            <span style="width:1px;height:24px;background:var(--border);margin:0 4px;align-self:center"></span>
+            <button type="button" class="editor-btn" onclick="execCmd('insertUnorderedList')" title="无序列表">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="editor-btn" onclick="execCmd('insertOrderedList')" title="有序列表">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="3" y="8" font-size="7" fill="currentColor" stroke="none">1</text><text x="3" y="14" font-size="7" fill="currentColor" stroke="none">2</text><text x="3" y="20" font-size="7" fill="currentColor" stroke="none">3</text></svg>
+            </button>
+            <span style="width:1px;height:24px;background:var(--border);margin:0 4px;align-self:center"></span>
+            <input type="file" id="np-img" accept="image/*" style="display:none" onchange="uploadImgToEditor(this)">
+            <button type="button" class="editor-btn" onclick="document.getElementById('np-img').click()" title="插入图片">📷</button>
+          </div>
+          <!-- Content Editable Area -->
+          <div class="new-post-form__content" id="np-content" contenteditable="true" data-placeholder="写点什么... 支持粘贴图片"></div>
+          <div class="new-post-form__actions">
+            <div style="display:flex;gap:var(--space-sm)">
+              <button class="btn btn--ghost btn--sm" onclick="closeNewPost()">取消</button>
+              <button class="btn btn--primary btn--sm" onclick="submitPost()" id="np-btn">发布</button>
+            </div>
+          </div>
+          <div id="np-error" class="form-error" style="display:none;margin-top:var(--space-sm)"></div>
+        </div>
+      </div>
+
+      <!-- Mobile: top sidebar cards (hidden on desktop) -->
+      <div class="sidebar-top animate-fade-in-up delay-2">
+        <div class="sidebar-card">
+          <div class="sidebar-title">🏆 等级排行</div>
+          <div id="leaderboard-mobile"></div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sidebar-title">📊 统计</div>
+          <div id="forum-stats-mobile" style="font-size:13px;color:var(--text-secondary)"></div>
+        </div>
+      </div>
+
+      <!-- Search + Controls -->
+      <div class="forum-search animate-fade-in-up delay-2">
+        <div class="forum-search__wrap">
+          <svg class="forum-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="forum-search__input" id="forum-search-input" placeholder="搜索帖子..." onkeyup="handleSearchKey(event)">
+          <button class="forum-search__btn" onclick="doForumSearch()">搜索</button>
+        </div>
+      </div>
+
+      <div class="forum-controls animate-fade-in-up delay-3">
+        <div class="forum-pills">
+          <button class="forum-pill active" data-sort="newest" onclick="changeSort(this)">🕐 最新</button>
+          <button class="forum-pill" data-sort="hot" onclick="changeSort(this)">🔥 热门</button>
+          <button class="forum-pill" data-sort="replies" onclick="changeSort(this)">💬 回复</button>
+        </div>
+        <span id="post-count" style="font-size:13px;color:var(--text-dim)"></span>
+      </div>
+
+      <!-- Desktop: sidebar layout -->
+      <div class="forum-body animate-fade-in-up delay-3">
+        <!-- Posts -->
+        <div class="forum-main">
+          <div id="posts-list"></div>
+          <div class="pag" id="pagination"></div>
+        </div>
+
+        <!-- Desktop Sidebar -->
+        <aside class="forum-sidebar">
+          <div class="sidebar-card">
+            <div class="sidebar-title">🏆 等级排行</div>
+            <div id="leaderboard"></div>
+          </div>
+          <div class="sidebar-card">
+            <div class="sidebar-title">📊 统计</div>
+            <div id="forum-stats" style="font-size:13px;color:var(--text-secondary)"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    Club.initPage('forum');
+    let currentSort = 'newest';
+    let currentPage = 1;
+    const PAGE_SIZE = 15;
+
+    const TAG_ICONS = {
+      '求助': '❓', '分享': '🔗', '讨论': '💬', '经验': '💡',
+      '资源': '📦', '新手': '🌱', '官方': '📢', '技术': '⚙️',
+      '合作': '🤝', '招聘': '📋', '干货': '📚',
+    };
+    function getTagIcon(tag) {
+      for (const [k, v] of Object.entries(TAG_ICONS)) { if (tag.includes(k)) return v; }
+      return '🏷️';
+    }
+
+    function getMedal(level) {
+      if (level >= 28) return '👑';
+      if (level >= 25) return '💎';
+      if (level >= 22) return '🏆';
+      if (level >= 19) return '🥇';
+      if (level >= 16) return '🥈';
+      if (level >= 13) return '🥉';
+      if (level >= 10) return '⭐';
+      if (level >= 7) return '🌟';
+      if (level >= 4) return '✨';
+      return '';
+    }
+
+    function changeSort(el) {
+      document.querySelectorAll('.forum-pill').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      currentSort = el.dataset.sort;
+      currentPage = 1;
+      loadPosts();
+    }
+
+    // Search
+    let currentKeyword = '';
+
+    function handleSearchKey(e) {
+      if (e.key === 'Enter') doForumSearch();
+    }
+
+    function doForumSearch() {
+      currentKeyword = document.getElementById('forum-search-input').value.trim();
+      currentPage = 1;
+      loadPosts();
+    }
+
+    function clearSearch() {
+      currentKeyword = '';
+      document.getElementById('forum-search-input').value = '';
+      currentPage = 1;
+      loadPosts();
+    }
+
+    // New post
+    function openNewPost() {
+      if (!api.auth.isLoggedIn()) { Club.toast('请先登录', 'info'); setTimeout(() => location.href='login.html', 1000); return; }
+      document.getElementById('np-trigger').style.display = 'none';
+      document.getElementById('np-form').classList.add('active');
+      document.getElementById('np-title').focus();
+    }
+    function closeNewPost() {
+      document.getElementById('np-trigger').style.display = '';
+      document.getElementById('np-form').classList.remove('active');
+    }
+
+    function execCmd(cmd) {
+      document.execCommand(cmd, false, null);
+      document.getElementById('np-content').focus();
+    }
+
+    async function uploadImgToEditor(input) {
+      const file = input.files[0]; if (!file) return;
+      const editor = document.getElementById('np-content');
+      const spinner = Club.showUploadSpinner(editor.closest('.new-post-form') || editor);
+      const fd = new FormData(); fd.append('file', file);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('club_token') },
+          body: fd,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: '上传失败' }));
+          Club.toast(err.error || '上传失败', 'error');
+          input.value = '';
+          return;
+        }
+        const data = await res.json();
+        if (data.success) {
+          editor.focus();
+          document.execCommand('insertHTML', false, '<img src="' + data.url + '" style="max-width:100%;border-radius:6px;margin:4px 0">');
+          Club.toast('图片已插入', 'success');
+        } else {
+          Club.toast(data.error || '上传失败', 'error');
+        }
+      } catch (e) {
+        Club.toast('网络错误', 'error');
+      }
+      Club.removeUploadSpinner(spinner);
+      input.value = '';
+    }
+
+    async function submitPost() {
+      const title = document.getElementById('np-title').value.trim();
+      const contentEl = document.getElementById('np-content');
+      const content = contentEl.innerHTML.trim();
+      const textContent = contentEl.textContent.trim();
+      const tags = document.getElementById('np-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const errorEl = document.getElementById('np-error');
+      if (!title || !textContent) { errorEl.textContent = '标题和内容不能为空'; errorEl.style.display = ''; return; }
+
+      await Club.btnLoading('#np-btn', async () => {
+        try {
+          const result = await api.request('/forum/posts', { method: 'POST', body: JSON.stringify({ title, content, tags }) });
+          if (result.success) {
+            closeNewPost();
+            document.getElementById('np-title').value = '';
+            contentEl.innerHTML = '';
+            document.getElementById('np-tags').value = '';
+            Club.toast('发布成功！', 'success');
+            loadPosts(1);
+          }
+        } catch (err) { errorEl.textContent = err.message || '发布失败'; errorEl.style.display = ''; }
+      });
+    }
+
+    // Load posts
+    async function loadPosts(page) {
+      currentPage = page || 1;
+      const container = document.getElementById('posts-list');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div>';
+
+      try {
+        const kwParam = currentKeyword ? '&keyword=' + encodeURIComponent(currentKeyword) : '';
+        const data = await api.request('/forum/posts?sort=' + currentSort + '&page=' + currentPage + '&limit=' + PAGE_SIZE + kwParam);
+
+        if (!data.posts.length) {
+          container.innerHTML = `
+            <div class="forum-empty">
+              <div class="forum-empty__icon">${currentKeyword ? '🔍' : '💬'}</div>
+              <div class="forum-empty__text">${currentKeyword ? `没有找到「${currentKeyword}」相关的帖子` : '还没有帖子，快来发第一帖吧！'}</div>
+              ${currentKeyword ? `<button class="btn btn--ghost btn--sm" onclick="clearSearch()">清除搜索</button>` : `<button class="btn btn--primary" onclick="openNewPost()">✏️ 发帖</button>`}
+            </div>
+          `;
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+
+        container.innerHTML = data.posts.map(p => {
+          try {
+            const tagList = (p.tags || []).slice(0, 3);
+            const tagHtml = tagList.map(t => '<span class="post-card__tag">' + getTagIcon(t) + ' ' + t + '</span>').join('');
+            const medal = getMedal(p.authorLevel || 1);
+            const color = p.authorLevelColor || '#a09888';
+            const excerpt = (p.content || '').replace(/<[^>]*>/g, '').replace(/\n/g, ' ').substring(0, 80);
+            const avatarHtml = p.authorAvatar
+              ? '<img src="' + p.authorAvatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+              : (p.author || '?').charAt(0).toUpperCase();
+            const likeFill = p.liked ? 'var(--gold)' : 'none';
+            const likeStroke = p.liked ? 'var(--gold)' : 'currentColor';
+
+            return '<div class="post-card" onclick="location.href=\'post.html?id=' + p.id + '\'">' +
+              '<div class="post-card__avatar">' + avatarHtml + '</div>' +
+              '<div class="post-card__body">' +
+                '<div class="post-card__top">' +
+                  '<span class="post-card__author">' + (p.author || '') + '</span>' +
+                  '<span class="post-card__level" style="background:' + color + '18;color:' + color + ';border:1px solid ' + color + '25">' + medal + ' Lv.' + (p.authorLevel || 1) + '</span>' +
+                  '<span class="post-card__time">' + Club.formatDate(p.createdAt) + '</span>' +
+                '</div>' +
+                '<div class="post-card__title">' + (p.title || '') + '</div>' +
+                '<div class="post-card__excerpt">' + excerpt + '</div>' +
+                '<div class="post-card__footer">' +
+                  (tagHtml ? '<div class="post-card__tags">' + tagHtml + '</div>' : '') +
+                  '<div class="post-card__stats">' +
+                    '<span class="post-card__stat">' +
+                      '<svg viewBox="0 0 24 24" fill="' + likeFill + '" stroke="' + likeStroke + '" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ' +
+                      (p.likesCount || 0) +
+                    '</span>' +
+                    '<span class="post-card__stat">' +
+                      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ' +
+                      (p.repliesCount || 0) +
+                    '</span>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          } catch(e) { return ''; }
+        }).join('');
+
+        renderPag(data.total);
+        document.getElementById('post-count').textContent = `共 ${data.total} 条帖子`;
+      } catch (e) {
+        console.error('Load posts error:', e);
+        container.innerHTML = '<div class="forum-empty"><div class="forum-empty__icon">😕</div><div class="forum-empty__text">加载失败</div></div>';
+      }
+    }
+
+    function renderPag(total) {
+      const container = document.getElementById('pagination');
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      let html = '';
+      if (currentPage > 1) html += `<button class="btn btn--ghost btn--sm" onclick="loadPosts(${currentPage-1})">‹</button>`;
+      const s = Math.max(1, currentPage-2), e = Math.min(totalPages, currentPage+2);
+      if (s > 1) { html += `<button class="btn btn--ghost btn--sm" onclick="loadPosts(1)">1</button>`; if (s > 2) html += `<span style="color:var(--text-dim);padding:0 6px">···</span>`; }
+      for (let i = s; i <= e; i++) html += `<button class="btn ${i===currentPage?'btn--primary':'btn--ghost'} btn--sm" onclick="loadPosts(${i})">${i}</button>`;
+      if (e < totalPages) { if (e < totalPages-1) html += `<span style="color:var(--text-dim);padding:0 6px">···</span>`; html += `<button class="btn btn--ghost btn--sm" onclick="loadPosts(${totalPages})">${totalPages}</button>`; }
+      if (currentPage < totalPages) html += `<button class="btn btn--ghost btn--sm" onclick="loadPosts(${currentPage+1})">›</button>`;
+      container.innerHTML = html;
+    }
+
+    // Sidebar
+    async function loadSidebar() {
+      try {
+        const lb = await api.request('/forum/leaderboard?limit=10');
+        const lbHtml = lb.map((u, i) => `
+          <div class="lb-item">
+            <div class="lb-rank ${i===0?'top1':i===1?'top2':i===2?'top3':''}">${i+1}</div>
+            <div class="lb-avatar">${u.username.charAt(0).toUpperCase()}</div>
+            <div class="lb-info">
+              <div class="lb-name">${u.username}</div>
+              <span class="post-card__level" style="background:${u.color}18;color:${u.color};border:1px solid ${u.color}25;font-size:10px">${getMedal(u.level)} Lv.${u.level}</span>
+            </div>
+            <div class="lb-exp">${u.exp}</div>
+          </div>
+        `).join('');
+        document.getElementById('leaderboard').innerHTML = lbHtml;
+        const lbMobile = document.getElementById('leaderboard-mobile');
+        if (lbMobile) lbMobile.innerHTML = lbHtml;
+      } catch (e) {}
+
+      try {
+        const stats = await api.request('/stats');
+        document.getElementById('stat-posts').textContent = stats.totalResources;
+        document.getElementById('stat-users').textContent = stats.totalMembers;
+        const statsHtml = `
+          <div style="margin-bottom:8px">📦 资源：<strong>${stats.totalResources}</strong></div>
+          <div style="margin-bottom:8px">👥 用户：<strong>${stats.totalMembers}</strong></div>
+          <div>👁️ 浏览：<strong>${stats.totalViews}</strong></div>
+        `;
+        document.getElementById('forum-stats').innerHTML = statsHtml;
+        const statsMobile = document.getElementById('forum-stats-mobile');
+        if (statsMobile) statsMobile.innerHTML = statsHtml;
+      } catch (e) {}
+    }
+
+    // 粘贴图片支持
+    document.addEventListener('paste', async (e) => {
+      const editor = document.getElementById('np-content');
+      if (!editor || !e.target.closest('#np-content')) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          const fd = new FormData(); fd.append('file', file);
+          try {
+            const res = await fetch('/api/upload', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + localStorage.getItem('club_token') },
+              body: fd,
+            });
+            const data = await res.json();
+            if (data.success) {
+              document.execCommand('insertHTML', false, `<img src="${data.url}" style="max-width:100%;border-radius:6px;margin:4px 0">`);
+            }
+          } catch (err) {}
+          break;
+        }
+      }
+    });
+
+    loadPosts(1);
+    loadSidebar();
+  </script>
+</body>
+</html>

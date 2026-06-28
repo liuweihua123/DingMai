@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源库 — 鼎脉人脉</title>
+  <link rel="icon" type="image/png" href="assets/icons8-teapot-material-outlined-32.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .list-header {
+      padding: var(--space-2xl) 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .list-header__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-xl);
+    }
+
+    .list-header__count {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .list-header__count strong {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* Search Bar */
+    .search-bar {
+      display: flex;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .search-bar__input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-bar__icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-bar__input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      color: var(--text-primary);
+      outline: none;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .search-bar__input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .search-bar__input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-xl);
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .filter-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .filter-select {
+      padding: 8px 32px 8px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      color: var(--text-secondary);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236b6155' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .filter-select:hover,
+    .filter-select:focus {
+      border-color: var(--border-hover);
+    }
+
+    .filter-select:focus {
+      border-color: var(--gold);
+    }
+
+    .filter-select option {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .filter-tags {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .filter-tag {
+      padding: 7px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .filter-tag:hover,
+    .filter-tag.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: var(--gold-glow);
+    }
+
+    /* Sort */
+    .sort-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sort-bar__left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .sort-btn {
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .sort-btn:hover {
+      color: var(--text-secondary);
+    }
+
+    .sort-btn.active {
+      color: var(--gold);
+      background: var(--gold-glow);
+    }
+
+    .sort-bar__right {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Resource List Grid */
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-xl);
+    }
+
+    @media (max-width: 768px) {
+      .resource-grid { grid-template-columns: 1fr; gap: var(--space-md); }
+      .filters { flex-direction: column; }
+      .search-row { flex-direction: column; }
+      .search-row .form-input { width: 100%; }
+      .filter-select { width: 100%; }
+      .sort-bar { flex-direction: column; gap: var(--space-sm); align-items: flex-start; }
+      .list-sidebar { display: none; }
+      .list-layout { flex-direction: column; }
+    }
+
+    /* Sidebar */
+    .list-layout {
+      display: flex;
+      gap: var(--space-2xl);
+      align-items: flex-start;
+    }
+
+    .list-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      position: sticky;
+      top: calc(var(--nav-height) + var(--space-xl));
+    }
+
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+    }
+
+    .sidebar-card__title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .sidebar-card__title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .hot-list {
+      list-style: none;
+    }
+
+    .hot-item {
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .hot-item:last-child {
+      border-bottom: none;
+    }
+
+    .hot-item:hover .hot-item__title {
+      color: var(--gold);
+    }
+
+    .hot-item__title {
+      font-size: 13px;
+      color: var(--text-secondary);
+      transition: color 0.3s var(--ease-out);
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .hot-item__meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    @media (max-width: 1024px) {
+      .list-sidebar { display: none; }
+    }
+
+    /* Empty state */
+    .no-results {
+      text-align: center;
+      padding: var(--space-4xl) var(--space-xl);
+      grid-column: 1 / -1;
+    }
+
+    .no-results__icon {
+      font-size: 48px;
+      margin-bottom: var(--space-lg);
+      opacity: 0.5;
+    }
+
+    .no-results__text {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-md);
+    }
+
+    .no-results__hint {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-content">
+    <div class="container">
+      <!-- Page Header -->
+      <div class="list-header animate-fade-in-up">
+        <div class="list-header__top">
+          <div>
+            <h1 class="page-header__title">资源库</h1>
+            <p class="page-header__subtitle">发现各行业核心人脉，精准对接您的需求</p>
+          </div>
+          <div class="list-header__count">
+            共 <strong id="result-count">0</strong> 条资源
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-bar">
+          <div class="search-bar__input-wrap">
+            <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-bar__input" id="search-input" placeholder="搜索资源名称、行业、关键词...">
+          </div>
+          <button class="btn btn--primary" onclick="doSearch()">搜索</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+          <div class="filter-group">
+            <span class="filter-label">行业：</span>
+            <select class="filter-select" id="filter-category">
+              <option value="">全部行业</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">地区：</span>
+            <select class="filter-select" id="filter-region">
+              <option value="">全部地区</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick filter tags -->
+        <div class="filter-tags" id="filter-tags">
+          <span class="filter-tag active" data-category="">全部</span>
+        </div>
+      </div>
+
+      <!-- Sort Bar -->
+      <div class="sort-bar animate-fade-in-up delay-1">
+        <div class="sort-bar__left">
+          <span class="sort-btn active" data-sort="newest">最新发布</span>
+          <span class="sort-btn" data-sort="popular">最多查看</span>
+          <span class="sort-btn" data-sort="price-asc">积分最低</span>
+          <span class="sort-btn" data-sort="price-desc">积分最高</span>
+        </div>
+      </div>
+
+      <div class="list-layout">
+        <!-- Main Content -->
+        <div class="list-main">
+          <div class="resource-grid" id="resource-grid">
+            <!-- JS rendered -->
+          </div>
+          <!-- Pagination -->
+          <div id="pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-2xl);flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="list-sidebar">
+          <div class="sidebar-card animate-slide-in-left delay-2">
+            <h3 class="sidebar-card__title">热门资源</h3>
+            <ul class="hot-list" id="hot-list">
+              <!-- JS rendered -->
+            </ul>
+          </div>
+          <div class="sidebar-card animate-slide-in-left delay-3">
+            <h3 class="sidebar-card__title">热门行业</h3>
+            <div id="hot-categories">
+              <!-- JS rendered -->
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    (async () => {
+    await Club.initPage('list');
+
+    const REGIONS = ['北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '南京', '重庆', '西安', '苏州', '天津', '长沙', '郑州', '青岛'];
+    let currentSort = 'newest';
+    let currentCategory = '';
+    let currentRegion = '';
+    let currentKeyword = '';
+
+    // Init filters
+    const categories = await api.meta.getCategories();
+    const catSelect = document.getElementById('filter-category');
+    categories.forEach(cat => {
+      catSelect.innerHTML += `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`;
+    });
+
+    const regionSelect = document.getElementById('filter-region');
+    REGIONS.forEach(r => {
+      regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
+    });
+
+    // Quick filter tags
+    const tagsContainer = document.getElementById('filter-tags');
+    categories.forEach(cat => {
+      tagsContainer.innerHTML += `<span class="filter-tag" data-category="${cat.id}">${cat.icon} ${cat.name}</span>`;
+    });
+
+    // URL params
+    const urlCat = Club.getParam('category');
+    if (urlCat) {
+      currentCategory = urlCat;
+      catSelect.value = urlCat;
+      document.querySelectorAll('.filter-tag').forEach(t => {
+        t.classList.toggle('active', t.dataset.category === urlCat);
+      });
+    }
+
+    // Filter tag click
+    document.getElementById('filter-tags').addEventListener('click', (e) => {
+      const tag = e.target.closest('.filter-tag');
+      if (!tag) return;
+      document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      currentCategory = tag.dataset.category;
+      document.getElementById('filter-category').value = currentCategory;
+      renderResources();
+    });
+
+    // Select filters
+    document.getElementById('filter-category').addEventListener('change', (e) => {
+      currentCategory = e.target.value;
+      document.querySelectorAll('.filter-tag').forEach(t => {
+        t.classList.toggle('active', t.dataset.category === currentCategory);
+      });
+      renderResources();
+    });
+
+    document.getElementById('filter-region').addEventListener('change', (e) => {
+      currentRegion = e.target.value;
+      renderResources();
+    });
+
+    // Search
+    document.getElementById('search-input').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') doSearch();
+    });
+
+    function doSearch() {
+      currentKeyword = document.getElementById('search-input').value.trim();
+      renderResources();
+    }
+
+    // Sort
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort;
+        renderResources();
+      });
+    });
+
+    // Pagination state
+    let currentPage = 1;
+    const PAGE_SIZE = 12;
+
+    // Render resources
+    async function renderResources(page) {
+      currentPage = page || 1;
+      const grid = document.getElementById('resource-grid');
+      grid.innerHTML = `<div style="display:contents">${Club.skeleton(4)}</div>`;
+
+      try {
+        const data = await api.resources.list({
+          category: currentCategory,
+          region: currentRegion,
+          keyword: currentKeyword,
+          sort: currentSort,
+          page: currentPage,
+          limit: PAGE_SIZE,
+        });
+
+        document.getElementById('result-count').textContent = data.total;
+
+        if (data.resources.length === 0) {
+          grid.innerHTML = `
+            <div class="no-results">
+              <div class="no-results__icon">🔍</div>
+              <div class="no-results__text">未找到匹配的资源</div>
+              <div class="no-results__hint">试试调整筛选条件或搜索关键词</div>
+            </div>
+          `;
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+
+        grid.innerHTML = data.resources.map((r, i) => `
+          <div class="card resource-card animate-fade-in-up delay-${(i % 4) + 1}" onclick="window.location.href='detail.html?id=${r.id}'">
+            ${r.image ? `<div style="height:160px;overflow:hidden;border-radius:var(--radius-lg) var(--radius-lg) 0 0"><img src="${r.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'"></div>` : ''}
+            <div class="resource-card__header">
+              <span class="resource-card__category">${Club.getCategoryIcon(r.category)} ${Club.getCategoryName(r.category)}</span>
+              <span class="resource-card__price">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+                ${r.price} 积分
+              </span>
+            </div>
+            <div class="resource-card__body">
+              <h3 class="resource-card__title">${r.title}</h3>
+              <p class="resource-card__desc">${r.intro.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+            </div>
+            <div class="resource-card__footer">
+              <div class="resource-card__meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  ${Club.formatNumber(r.views)}
+                </span>
+                ${r.unlockCount ? `<span style="color:var(--gold)">🔥 ${r.unlockCount}人已解锁</span>` : ''}
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ${r.region}
+                </span>
+              </div>
+              <div class="resource-card__tags">
+                ${r.tags.slice(0, 2).map(t => `<span class="tag">${t}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        // Render pagination
+        const totalPages = Math.ceil(data.total / PAGE_SIZE);
+        renderPagination(totalPages);
+      } catch (err) {
+        grid.innerHTML = '<div style="text-align:center; padding:60px; color:var(--accent-red)">加载失败，请稍后重试</div>';
+      }
+    }
+
+    // Render sidebar
+    (async () => {
+      const hotData = await api.resources.hot(5);
+      document.getElementById('hot-list').innerHTML = hotData.map((r, i) => `
+        <li class="hot-item" onclick="window.location.href='detail.html?id=${r.id}'">
+          <div class="hot-item__title"><span style="color:${i < 3 ? 'var(--gold)' : 'var(--text-dim)'};font-weight:${i < 3 ? '700' : '400'};margin-right:6px">${i + 1}.</span>${r.title}</div>
+          <div class="hot-item__meta">${r.unlockCount > 0 ? '🔥 ' + r.unlockCount + '人解锁 · ' : ''}${r.price} 积分</div>
+        </li>
+      `).join('');
+
+      const cats = categories.sort((a, b) => b.count - a.count).slice(0, 6);
+      document.getElementById('hot-categories').innerHTML = cats.map(cat => `
+        <div class="filter-tag" style="margin: 0 6px 8px 0; cursor: pointer;" onclick="document.getElementById('filter-category').value='${cat.id}'; currentCategory='${cat.id}'; renderResources();">
+          ${cat.icon} ${cat.name} (${cat.count})
+        </div>
+      `).join('');
+    })();
+
+    // Pagination
+    function renderPagination(totalPages) {
+      const container = document.getElementById('pagination');
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+      let html = '';
+      if (currentPage > 1) {
+        html += `<button class="btn btn--ghost btn--sm" onclick="renderResources(${currentPage - 1})">上一页</button>`;
+      }
+
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, currentPage + 2);
+
+      if (start > 1) {
+        html += `<button class="btn btn--ghost btn--sm" onclick="renderResources(1)">1</button>`;
+        if (start > 2) html += `<span style="color:var(--text-dim);padding:0 4px">...</span>`;
+      }
+
+      for (let i = start; i <= end; i++) {
+        html += `<button class="btn ${i === currentPage ? 'btn--primary' : 'btn--ghost'} btn--sm" onclick="renderResources(${i})">${i}</button>`;
+      }
+
+      if (end < totalPages) {
+        if (end < totalPages - 1) html += `<span style="color:var(--text-dim);padding:0 4px">...</span>`;
+        html += `<button class="btn btn--ghost btn--sm" onclick="renderResources(${totalPages})">${totalPages}</button>`;
+      }
+
+      if (currentPage < totalPages) {
+        html += `<button class="btn btn--ghost btn--sm" onclick="renderResources(${currentPage + 1})">下一页</button>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // Initial render
+    await renderResources(1);
+    })(); // end async
+  </script>
+</body>
+</html>

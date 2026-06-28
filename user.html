@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 — 鼎脉人脉</title>
+  <link rel="icon" type="image/png" href="assets/icons8-teapot-material-outlined-32.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .user-page {
+      padding-top: calc(var(--nav-height) + var(--space-2xl));
+      padding-bottom: var(--space-4xl);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xl);
+      margin-bottom: var(--space-2xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark));
+    }
+
+    .profile-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100%;
+      background: radial-gradient(ellipse at right, rgba(201, 169, 110, 0.04), transparent);
+      pointer-events: none;
+    }
+
+    .profile-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--bg-primary);
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px rgba(201, 169, 110, 0.25);
+    }
+
+    .profile-info {
+      flex: 1;
+    }
+
+    .profile-info__name {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .profile-info__meta {
+      font-size: 14px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .profile-points {
+      text-align: right;
+      position: relative;
+      z-index: 1;
+    }
+
+    .profile-points__label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-xs);
+    }
+
+    .profile-points__value {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .profile-points__unit {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .stat-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      text-align: center;
+    }
+
+    .stat-item__value {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: var(--space-sm);
+    }
+
+    .stat-item__label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Tabs */
+    .user-tabs {
+      display: flex;
+      gap: var(--space-xl);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-xl);
+    }
+
+    .user-tab {
+      padding: var(--space-md) 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .user-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .user-tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.4s var(--ease-out);
+    }
+
+    /* Recharge Plans */
+    .recharge-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .recharge-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.4s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .recharge-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .recharge-card.popular {
+      border-color: var(--gold);
+    }
+
+    .recharge-card.popular::before {
+      content: '热门';
+      position: absolute;
+      top: 12px;
+      right: -28px;
+      background: var(--gold);
+      color: var(--bg-primary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 32px;
+      transform: rotate(45deg);
+    }
+
+    .recharge-card__points {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: var(--space-xs);
+    }
+
+    .recharge-card__label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-md);
+    }
+
+    .recharge-card__price {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .recharge-card__price span {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .recharge-card__bonus {
+      font-size: 12px;
+      color: var(--accent-green);
+      margin-top: var(--space-sm);
+      padding: 4px 12px;
+      background: rgba(107, 170, 117, 0.1);
+      border-radius: var(--radius-full);
+      display: inline-block;
+    }
+
+    /* Transaction List */
+    .tx-list {
+      list-style: none;
+    }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tx-item:last-child {
+      border-bottom: none;
+    }
+
+    .tx-item__left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .tx-item__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .tx-item__icon--gift {
+      background: rgba(201, 169, 110, 0.15);
+    }
+
+    .tx-item__icon--recharge {
+      background: rgba(107, 170, 117, 0.15);
+    }
+
+    .tx-item__icon--view {
+      background: rgba(91, 143, 185, 0.15);
+    }
+
+    .tx-item__desc {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .tx-item__time {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .tx-item__amount {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .tx-item__amount--positive {
+      color: var(--accent-green);
+    }
+
+    .tx-item__amount--negative {
+      color: var(--accent-red);
+    }
+
+    /* View Record */
+    .view-record {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-md);
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .view-record:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+
+    .view-record__info {
+      flex: 1;
+    }
+
+    .view-record__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .view-record__meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .view-record__action {
+      font-size: 13px;
+      color: var(--gold);
+    }
+
+    @media (max-width: 768px) {
+      .user-page { padding-top: calc(var(--nav-height) + var(--space-lg)); }
+      .profile-card { flex-direction: column; text-align: center; padding: var(--space-lg); gap: var(--space-lg); }
+      .profile-info { width: 100%; }
+      .profile-info__name { font-size: 20px; }
+      .profile-info__meta { justify-content: center; flex-wrap: wrap; gap: var(--space-sm); }
+      .profile-points { text-align: center; }
+      .profile-points__value { font-size: 36px; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); }
+      .stat-item { padding: var(--space-md); }
+      .stat-item__value { font-size: 24px; }
+      .recharge-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
+      .recharge-card { padding: var(--space-lg); }
+      .recharge-card__points { font-size: 28px; }
+      .recharge-card__price { font-size: 18px; }
+      .user-tabs { gap: var(--space-md); overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .user-tabs::-webkit-scrollbar { display: none; }
+      .user-tab { white-space: nowrap; font-size: 13px; padding: var(--space-sm) 0; }
+      .view-record { padding: var(--space-md); }
+      .view-record__title { font-size: 14px; }
+      .view-record__meta { flex-wrap: wrap; gap: var(--space-xs); }
+      .tx-item { padding: var(--space-md) 0; }
+      .tx-item__desc { font-size: 13px; }
+      .recharge-card__bonus { font-size: 10px; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .recharge-grid { grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+      .recharge-card__price { font-size: 16px; }
+    }
+
+    /* Recharge success modal */
+    .recharge-success {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s var(--ease-out);
+    }
+
+    .recharge-success.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .recharge-success__box {
+      background: var(--bg-card);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl) var(--space-3xl);
+      text-align: center;
+      transform: scale(0.8);
+      transition: transform 0.5s var(--ease-spring);
+    }
+
+    .recharge-success.active .recharge-success__box {
+      transform: scale(1);
+    }
+
+    .recharge-success__icon {
+      font-size: 64px;
+      margin-bottom: var(--space-lg);
+    }
+
+    .recharge-success__title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: var(--space-sm);
+    }
+
+    .recharge-success__desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-lg);
+    }
+
+    .recharge-success__points {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: var(--space-xl);
+    }
+  </style>
+</head>
+<body>
+  <div class="user-page">
+    <div class="container container--narrow">
+      <!-- Profile Card -->
+      <div class="profile-card animate-fade-in-up">
+        <div class="profile-avatar" id="profile-avatar">U</div>
+        <div class="profile-info" style="flex:1">
+          <div class="profile-info__name" id="profile-name">用户名</div>
+          <div style="display:flex;align-items:center;gap:var(--space-sm);margin:4px 0">
+            <span id="profile-level" style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px"></span>
+            <span id="profile-level-title" style="font-size:12px;color:var(--text-muted)"></span>
+          </div>
+          <!-- Level Progress -->
+          <div style="margin:8px 0">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-bottom:4px">
+              <span>经验 <span id="profile-exp">0</span></span>
+              <span id="profile-next-exp">下一级需要 0</span>
+            </div>
+            <div style="height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden">
+              <div id="profile-exp-bar" style="height:100%;border-radius:3px;transition:width 0.5s var(--ease-out)"></div>
+            </div>
+          </div>
+          <div class="profile-info__meta">
+            <span id="profile-phone">未绑定手机</span>
+            <span id="profile-date">注册时间</span>
+          </div>
+        </div>
+        <div class="profile-points">
+          <div class="profile-points__label">积分余额</div>
+          <div class="profile-points__value"><span id="profile-points">0</span><span class="profile-points__unit"> 分</span></div>
+        </div>
+      </div>
+
+      <!-- Check-in -->
+      <div class="card animate-fade-in-up delay-1" style="padding:var(--space-xl); margin-bottom:var(--space-2xl); display:flex; align-items:center; justify-content:space-between; gap:var(--space-lg); flex-wrap:wrap" id="checkin-card">
+        <div style="display:flex; align-items:center; gap:var(--space-lg)">
+          <div style="font-size:36px">📅</div>
+          <div>
+            <div style="font-weight:600; font-size:15px; margin-bottom:2px">每日签到</div>
+            <div style="font-size:13px; color:var(--text-muted)" id="checkin-info">签到可获得积分奖励</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:var(--space-lg)">
+          <div style="text-align:center" id="checkin-streak-wrap" style="display:none">
+            <div style="font-family:var(--font-display); font-size:24px; font-weight:700; color:var(--gold)" id="checkin-streak">0</div>
+            <div style="font-size:11px; color:var(--text-dim)">连续签到</div>
+          </div>
+          <button class="btn btn--primary" id="checkin-btn" onclick="doCheckin()">签到</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row animate-fade-in-up delay-1">
+        <div class="stat-item">
+          <div class="stat-item__value" id="stat-viewed">0</div>
+          <div class="stat-item__label">已查看资源</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item__value" id="stat-spent">0</div>
+          <div class="stat-item__label">累计消耗积分</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item__value" id="stat-recharged">0</div>
+          <div class="stat-item__label">累计充值积分</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="user-tabs animate-fade-in-up delay-2">
+        <div class="user-tab active" data-tab="recharge">积分充值</div>
+        <div class="user-tab" data-tab="favorites">我的收藏</div>
+        <div class="user-tab" data-tab="submissions">我的发布</div>
+        <div class="user-tab" data-tab="myposts">我的帖子</div>
+        <div class="user-tab" data-tab="orders">充值订单</div>
+        <div class="user-tab" data-tab="records">已查看记录</div>
+        <div class="user-tab" data-tab="transactions">积分流水</div>
+        <div class="user-tab" data-tab="password">密码设置</div>
+      </div>
+
+      <!-- Recharge Tab -->
+      <div class="tab-content active" id="tab-recharge">
+        <div class="recharge-grid" id="recharge-grid">
+          <!-- JS rendered -->
+        </div>
+        <div class="card" style="padding: var(--space-xl); text-align: center;">
+          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+            💡 积分仅用于查看资源联系方式，一次解锁永久可查看。<br>
+            选择套餐后将跳转支付宝完成付款，付款成功积分自动到账。<br>
+            如遇问题请联系客服。
+          </p>
+        </div>
+      </div>
+
+      <!-- View Records Tab -->
+      <div class="tab-content" id="tab-records">
+        <div id="records-list"></div>
+        <div id="records-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+      </div>
+
+      <!-- Transactions Tab -->
+      <div class="tab-content" id="tab-transactions">
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <ul class="tx-list" id="tx-list" style="padding: 0 var(--space-xl);">
+          </ul>
+        </div>
+        <div id="tx-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+      </div>
+
+      <!-- Favorites Tab -->
+      <div class="tab-content" id="tab-favorites">
+        <div id="favorites-list"></div>
+      </div>
+
+      <!-- Submissions Tab -->
+      <div class="tab-content" id="tab-submissions">
+        <div id="submissions-list"></div>
+      </div>
+
+      <!-- My Posts Tab -->
+      <div class="tab-content" id="tab-myposts">
+        <div id="myposts-list"></div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div class="tab-content" id="tab-orders">
+        <div id="my-orders-list"></div>
+      </div>
+
+      <!-- Password Tab -->
+      <div class="tab-content" id="tab-password">
+        <div style="display:flex;justify-content:center">
+          <div class="card" style="padding:var(--space-2xl); max-width:480px; width:100%;">
+            <h3 style="font-family:var(--font-display);font-size:18px;margin-bottom:var(--space-xl);text-align:center">修改密码</h3>
+            <div class="form-group">
+              <label class="form-label">原密码</label>
+              <input type="password" class="form-input" id="set-pw-old">
+            </div>
+            <div class="form-group">
+              <label class="form-label">新密码</label>
+              <input type="password" class="form-input" id="set-pw-new" placeholder="至少6位">
+            </div>
+            <div class="form-group">
+              <label class="form-label">确认新密码</label>
+              <input type="password" class="form-input" id="set-pw-new2">
+            </div>
+            <button class="btn btn--primary btn--block" onclick="changeMyPw()">修改密码</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recharge Success Modal -->
+  <div class="recharge-success" id="recharge-success">
+    <div class="recharge-success__box">
+      <div class="recharge-success__icon">💎</div>
+      <div class="recharge-success__title">充值成功！</div>
+      <div class="recharge-success__desc">积分已到账</div>
+      <div class="recharge-success__points" id="success-points">+0</div>
+      <button class="btn btn--primary" onclick="closeRechargeSuccess()">好的</button>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    (async () => {
+    // Require auth
+    if (!Club.auth.requireAuth()) return;
+    await Club.initPage('user');
+
+    // Tab switching
+    document.querySelectorAll('.user-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.user-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // 通用分页
+    function renderPagePag(containerId, total, pageSize, current, loadFn) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const totalPages = Math.ceil(total / pageSize);
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      let html = '';
+      if (current > 1) html += `<button class="btn btn--ghost btn--sm" onclick="(${loadFn.name})(${current-1})">‹</button>`;
+      const s = Math.max(1, current-2), e = Math.min(totalPages, current+2);
+      if (s > 1) { html += `<button class="btn btn--ghost btn--sm" onclick="(${loadFn.name})(1)">1</button>`; if (s > 2) html += `<span style="color:var(--text-dim);padding:0 6px">···</span>`; }
+      for (let i = s; i <= e; i++) html += `<button class="btn ${i===current?'btn--primary':'btn--ghost'} btn--sm" onclick="(${loadFn.name})(${i})">${i}</button>`;
+      if (e < totalPages) { if (e < totalPages-1) html += `<span style="color:var(--text-dim);padding:0 6px">···</span>`; html += `<button class="btn btn--ghost btn--sm" onclick="(${loadFn.name})(${totalPages})">${totalPages}</button>`; }
+      if (current < totalPages) html += `<button class="btn btn--ghost btn--sm" onclick="(${loadFn.name})(${current+1})">›</button>`;
+      container.innerHTML = html;
+    }
+
+    // Render profile
+    async function renderProfile() {
+      try {
+        const u = await api.auth.getMe();
+        const avatarEl = document.getElementById('profile-avatar');
+        if (u.avatar) {
+          avatarEl.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+        } else {
+          avatarEl.textContent = u.username.charAt(0).toUpperCase();
+        }
+        document.getElementById('profile-name').textContent = u.username;
+        document.getElementById('profile-phone').textContent = u.phone || '未绑定手机';
+        document.getElementById('profile-date').textContent = '注册于 ' + Club.formatDate(u.createdAt);
+        document.getElementById('profile-points').textContent = u.points;
+        // 等级信息
+        const lvEl = document.getElementById('profile-level');
+        if (lvEl && u.level) {
+          lvEl.textContent = 'Lv.' + u.level;
+          lvEl.style.background = u.levelColor + '22';
+          lvEl.style.color = u.levelColor;
+          lvEl.style.border = '1px solid ' + u.levelColor + '33';
+          document.getElementById('profile-level-title').textContent = u.levelTitle || '';
+          document.getElementById('profile-exp').textContent = u.exp || 0;
+          document.getElementById('profile-next-exp').textContent = u.level < 30 ? '下一级需要 ' + u.nextExp : '已满级';
+          const bar = document.getElementById('profile-exp-bar');
+          bar.style.width = (u.levelProgress || 0) + '%';
+          bar.style.background = u.levelColor;
+        }
+      } catch (e) {}
+    }
+    await renderProfile();
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const [records, txs] = await Promise.all([
+          api.user.getViewRecords(),
+          api.user.getTransactions(),
+        ]);
+        const spent = txs.filter(t => t.type === 'view').reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        const recharged = txs.filter(t => t.type === 'recharge').reduce((sum, t) => sum + t.amount, 0);
+        document.getElementById('stat-viewed').textContent = records.length;
+        document.getElementById('stat-spent').textContent = spent;
+        document.getElementById('stat-recharged').textContent = recharged;
+      } catch (e) {}
+    }
+    await loadStats();
+
+    // Recharge plans
+    (async () => {
+      const plans = await api.meta.getPlans();
+      const grid = document.getElementById('recharge-grid');
+      grid.innerHTML = plans.map(plan => `
+        <div class="recharge-card ${plan.popular ? 'popular' : ''}" onclick="doRecharge(${plan.id})">
+          <div class="recharge-card__points">${plan.points}</div>
+          <div class="recharge-card__label">${plan.label}</div>
+          <div class="recharge-card__price">¥${plan.price} <span>元</span></div>
+          ${plan.bonus ? `<div class="recharge-card__bonus">额外赠送 ${plan.bonus} 积分</div>` : ''}
+        </div>
+      `).join('');
+    })();
+
+    // 显示支付等待遮罩
+    function showPayLoading() {
+      // 移除旧的
+      document.getElementById('pay-loading')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'pay-loading';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;opacity:0;transition:opacity 0.3s';
+      overlay.innerHTML = `
+        <div style="position:relative;width:80px;height:80px">
+          <div style="position:absolute;inset:0;border:3px solid rgba(201,169,110,0.15);border-radius:50%"></div>
+          <div style="position:absolute;inset:0;border:3px solid transparent;border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite"></div>
+          <div style="position:absolute;inset:8px;border:2px solid transparent;border-bottom-color:var(--gold-light);border-radius:50%;animation:spin 1.5s linear infinite reverse"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px">💳</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-display);font-size:18px;color:var(--text-primary);margin-bottom:8px">正在跳转支付</div>
+          <div style="font-size:13px;color:var(--text-muted)">请稍候，正在创建支付订单...</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.style.opacity = '1');
+    }
+
+    // 浏览器返回时自动移除加载遮罩
+    window.addEventListener('pageshow', () => {
+      document.getElementById('pay-loading')?.remove();
+    });
+
+    // Recharge action — 跳转支付宝
+    window.doRecharge = async function(planId) {
+      try {
+        showPayLoading();
+        const result = await api.payment.create(planId);
+
+        if (result.success && result.payUrl) {
+          window.location.href = result.payUrl;
+        } else {
+          document.getElementById('pay-loading')?.remove();
+          Club.toast('创建订单失败', 'error');
+        }
+      } catch (err) {
+        document.getElementById('pay-loading')?.remove();
+        Club.toast(err.message || '创建订单失败', 'error');
+      }
+    };
+
+    window.closeRechargeSuccess = function() {
+      document.getElementById('recharge-success').classList.remove('active');
+    };
+
+    // 我的发布
+    let mySubmissions = [];
+
+    async function loadMySubmissions() {
+      try {
+        mySubmissions = await api.request('/user/submissions');
+        const container = document.getElementById('submissions-list');
+        if (!mySubmissions.length) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state__icon">📝</div>
+              <div class="empty-state__text">暂未发布任何资源</div>
+              <p style="font-size:13px;color:var(--text-dim);margin:var(--space-md) 0 var(--space-xl)">分享你的人脉资源，审核通过后可获得积分奖励</p>
+              <a href="publish.html" class="btn btn--primary" style="padding:12px 36px">✨ 去发布</a>
+            </div>
+          `;
+          return;
+        }
+        const statusMap = {
+          'pending': { text: '审核中', cls: 'badge--gold' },
+          'approved': { text: '已通过', cls: 'badge--green' },
+          'rejected': { text: '已驳回', cls: 'badge--red' },
+        };
+        container.innerHTML = mySubmissions.map(s => {
+          const st = statusMap[s.status] || { text: s.status, cls: '' };
+          return `
+            <div class="view-record" style="cursor:pointer" onclick="showSubmissionDetail(${s.id})">
+              <div class="view-record__info">
+                <div class="view-record__title">${s.title}</div>
+                <div class="view-record__meta">
+                  <span class="badge ${st.cls}">${st.text}</span>
+                  <span>${s.categoryName || s.category}</span>
+                  <span>${s.region}</span>
+                  <span>${s.price} 积分</span>
+                  ${s.status === 'rejected' && s.rejectReason ? `<span style="color:var(--accent-red)">原因：${s.rejectReason}</span>` : ''}
+                </div>
+              </div>
+              <div style="display:flex;gap:var(--space-sm)" onclick="event.stopPropagation()">
+                ${s.status === 'pending' ? `<button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="withdrawSubmission(${s.id})">撤回</button>` : ''}
+                ${s.status === 'rejected' || s.status === 'pending' ? `<a href="publish.html?edit=${s.id}" class="btn btn--ghost btn--sm">编辑</a>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {}
+    }
+    loadMySubmissions();
+
+    // 查看发布详情
+    window.showSubmissionDetail = async function(id) {
+      try {
+        const r = await api.request(`/user/submissions/${id}`);
+        const existing = document.getElementById('sub-detail-modal');
+        if (existing) existing.remove();
+
+        const statusMap = {
+          'pending': { text: '审核中', cls: 'badge--gold' },
+          'approved': { text: '已通过', cls: 'badge--green' },
+          'rejected': { text: '已驳回', cls: 'badge--red' },
+        };
+        const st = statusMap[r.status] || { text: r.status, cls: '' };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.id = 'sub-detail-modal';
+        overlay.innerHTML = `
+          <div class="modal" style="max-width:600px;text-align:left">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xl)">
+              <h3 style="font-family:var(--font-display);font-size:20px">发布详情</h3>
+              <button class="btn btn--ghost btn--sm" onclick="document.getElementById('sub-detail-modal').remove()">关闭</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-lg)">
+              <div><span style="color:var(--text-dim);font-size:12px">状态</span><div><span class="badge ${st.cls}">${st.text}</span></div></div>
+              <div><span style="color:var(--text-dim);font-size:12px">积分价格</span><div style="color:var(--gold);font-weight:600">${r.price} 积分</div></div>
+              <div><span style="color:var(--text-dim);font-size:12px">分类</span><div>${r.categoryName || r.category}</div></div>
+              <div><span style="color:var(--text-dim);font-size:12px">地区</span><div>${r.region}</div></div>
+              <div><span style="color:var(--text-dim);font-size:12px">浏览</span><div>${r.views} 次</div></div>
+              <div><span style="color:var(--text-dim);font-size:12px">发布时间</span><div>${r.createdAt}</div></div>
+            </div>
+
+            ${r.rejectReason ? `<div style="background:rgba(196,92,79,0.08);border:1px solid rgba(196,92,79,0.2);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-lg);font-size:13px;color:var(--accent-red)">驳回原因：${r.rejectReason}</div>` : ''}
+
+            ${r.image ? `<div style="margin-bottom:var(--space-lg)"><img src="${r.image}" style="max-width:100%;border-radius:var(--radius-md)"></div>` : ''}
+
+            <div style="margin-bottom:var(--space-lg)">
+              <div style="color:var(--text-dim);font-size:12px;margin-bottom:var(--space-sm)">介绍</div>
+              <div style="font-size:14px;color:var(--text-secondary);line-height:1.8;max-height:150px;overflow-y:auto">${r.intro}</div>
+            </div>
+
+            <div style="margin-bottom:var(--space-lg)">
+              <div style="color:var(--text-dim);font-size:12px;margin-bottom:var(--space-sm)">联系方式</div>
+              <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-secondary);white-space:pre-line">${r.contact}</div>
+            </div>
+
+            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+              ${r.status === 'pending' ? `<button class="btn btn--ghost" style="flex:1;color:var(--accent-red)" onclick="withdrawSubmission(${r.id});document.getElementById('sub-detail-modal').remove()">撤回发布</button>` : ''}
+              ${r.status === 'pending' || r.status === 'rejected' ? `<a href="publish.html?edit=${r.id}" class="btn btn--primary" style="flex:1;text-align:center">编辑修改</a>` : ''}
+              <button class="btn btn--ghost" style="flex:1" onclick="document.getElementById('sub-detail-modal').remove()">关闭</button>
+            </div>
+          </div>
+        `;
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+      } catch (e) {
+        Club.toast('加载失败', 'error');
+      }
+    };
+
+    // 撤回发布
+    window.withdrawSubmission = async function(id) {
+      const confirmed = await Club.confirm({
+        title: '撤回发布',
+        message: '确认撤回该发布？撤回后将被删除。',
+        confirmText: '确认撤回',
+        type: 'danger',
+      });
+      if (!confirmed) return;
+      try {
+        const r = await api.request(`/user/submissions/${id}`, { method: 'DELETE' });
+        if (r.success) {
+          Club.toast('已撤回', 'success');
+          loadMySubmissions();
+        }
+      } catch (err) {
+        Club.toast(err.message || '撤回失败', 'error');
+      }
+    };
+
+    // 我的收藏
+    (async () => {
+      try {
+        const favorites = await api.user.getFavorites();
+        const container = document.getElementById('favorites-list');
+        if (!favorites.length) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">⭐</div><div class="empty-state__text">暂无收藏</div><a href="list.html" class="btn btn--primary btn--sm mt-lg">去浏览资源</a></div>';
+          return;
+        }
+        container.innerHTML = favorites.map(f => `
+          <div class="view-record" onclick="window.location.href='detail.html?id=${f.resourceId}'">
+            <div class="view-record__info">
+              <div class="view-record__title">${f.title}</div>
+              <div class="view-record__meta">
+                <span>${Club.getCategoryIcon(f.category)} ${Club.getCategoryName(f.category)}</span>
+                <span>${f.region}</span>
+                <span>${f.price} 积分</span>
+              </div>
+            </div>
+            <span class="view-record__action">查看 →</span>
+          </div>
+        `).join('');
+      } catch (e) {}
+    })();
+
+    // 我的帖子
+    async function loadMyPosts() {
+      try {
+        const user = api.auth.getLocalUser();
+        const data = await api.request(`/forum/posts?page=1&limit=50`);
+        const myPosts = data.posts.filter(p => p.authorId === user.id);
+        const container = document.getElementById('myposts-list');
+        if (!myPosts.length) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">💬</div><div class="empty-state__text">暂未发帖</div><a href="forum.html" class="btn btn--primary btn--sm mt-lg">去发帖</a></div>';
+          return;
+        }
+        container.innerHTML = myPosts.map(p => `
+          <div class="view-record">
+            <div class="view-record__info" onclick="window.location.href='post.html?id=${p.id}'" style="cursor:pointer">
+              <div class="view-record__title">${p.title}</div>
+              <div class="view-record__meta">
+                <span>❤️ ${p.likesCount}</span>
+                <span>💬 ${p.repliesCount}</span>
+                <span>${Club.formatDate(p.createdAt)}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:var(--space-sm);flex-shrink:0" onclick="event.stopPropagation()">
+              <button class="btn btn--ghost btn--sm" onclick="editMyPost(${p.id})">编辑</button>
+              <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="deleteMyPost(${p.id},'${p.title.replace(/'/g,"\\'")}')">删除</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+    loadMyPosts();
+
+    // 编辑帖子
+    window.editMyPost = async function(id) {
+      try {
+        const post = await api.request(`/forum/posts/${id}`);
+        const existing = document.getElementById('edit-post-modal');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.id = 'edit-post-modal';
+        overlay.innerHTML = `
+          <div class="modal" style="max-width:600px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xl)">
+              <h3 style="font-family:var(--font-display);font-size:20px">编辑帖子</h3>
+              <button class="btn btn--ghost btn--sm" onclick="document.getElementById('edit-post-modal').remove()">✕</button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">标题</label>
+              <input type="text" class="form-input" id="ep-title" value="${post.title}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">标签（逗号分隔）</label>
+              <input type="text" class="form-input" id="ep-tags" value="${(post.tags||[]).join(',')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">内容</label>
+              <textarea class="form-input" id="ep-content" style="min-height:150px">${post.content}</textarea>
+            </div>
+            <div id="ep-error" class="form-error" style="display:none;margin-bottom:var(--space-md)"></div>
+            <div style="display:flex;gap:var(--space-md)">
+              <button class="btn btn--ghost" style="flex:1" onclick="document.getElementById('edit-post-modal').remove()">取消</button>
+              <button class="btn btn--primary" style="flex:1" onclick="saveEditPost(${id})" id="ep-btn">保存</button>
+            </div>
+          </div>
+        `;
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+      } catch (e) {
+        Club.toast('加载失败', 'error');
+      }
+    };
+
+    window.saveEditPost = async function(id) {
+      const title = document.getElementById('ep-title').value.trim();
+      const content = document.getElementById('ep-content').value.trim();
+      const tags = document.getElementById('ep-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const errorEl = document.getElementById('ep-error');
+      if (!title || !content) { errorEl.textContent = '标题和内容不能为空'; errorEl.style.display = ''; return; }
+
+      const btn = document.getElementById('ep-btn');
+      await Club.btnLoading(btn, async () => {
+        try {
+          await api.request(`/forum/posts/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title, content, tags }),
+          });
+          document.getElementById('edit-post-modal').remove();
+          Club.toast('修改成功', 'success');
+          loadMyPosts();
+        } catch (err) {
+          errorEl.textContent = err.message || '修改失败';
+          errorEl.style.display = '';
+        }
+      });
+    };
+
+    // 删除帖子
+    window.deleteMyPost = async function(id, title) {
+      const confirmed = await Club.confirm({
+        title: '删除帖子',
+        message: `确认删除帖子「${title}」？<br>删除后不可恢复。`,
+        confirmText: '确认删除',
+        cancelText: '取消',
+        type: 'danger',
+      });
+      if (!confirmed) return;
+      try {
+        await api.request(`/forum/posts/${id}`, { method: 'DELETE' });
+        Club.toast('已删除', 'success');
+        loadMyPosts();
+      } catch (err) {
+        Club.toast(err.message || '删除失败', 'error');
+      }
+    };
+
+    // 我的充值订单
+    (async () => {
+      try {
+        const txs = await api.user.getTransactions();
+        const orders = txs.filter(t => t.type === 'recharge');
+        const container = document.getElementById('my-orders-list');
+        if (!orders.length) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📋</div><div class="empty-state__text">暂无充值记录</div></div>';
+          return;
+        }
+        container.innerHTML = orders.map(o => `
+          <div class="view-record">
+            <div class="view-record__info">
+              <div class="view-record__title">${o.desc}</div>
+              <div class="view-record__meta">
+                <span style="color:var(--accent-green);font-weight:600">+${o.amount} 积分</span>
+                <span>${o.createdAt}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    })();
+
+    // 修改密码
+    // 每日签到
+    (async () => {
+      try {
+        const status = await api.user.getCheckinStatus();
+        document.getElementById('checkin-streak').textContent = status.streak;
+        if (status.checkedIn) {
+          document.getElementById('checkin-btn').textContent = '已签到 ✓';
+          document.getElementById('checkin-btn').disabled = true;
+          document.getElementById('checkin-btn').classList.remove('btn--primary');
+          document.getElementById('checkin-btn').classList.add('btn--ghost');
+          document.getElementById('checkin-info').textContent = `今日已签到，获得 ${status.points} 积分`;
+        } else {
+          document.getElementById('checkin-info').textContent = `签到可获得 ${status.points} 积分`;
+        }
+      } catch (e) {}
+    })();
+
+    window.doCheckin = async function() {
+      const btn = document.getElementById('checkin-btn');
+      await Club.btnLoading(btn, async () => {
+        try {
+          const result = await api.user.checkin();
+          if (result.success) {
+            btn.textContent = '已签到 ✓';
+            btn.classList.remove('btn--primary');
+            btn.classList.add('btn--ghost');
+            btn.disabled = true;
+            document.getElementById('checkin-info').textContent = `签到成功，获得 ${result.points} 积分！`;
+            document.getElementById('checkin-streak').textContent = parseInt(document.getElementById('checkin-streak').textContent) + 1;
+            await renderProfile();
+            Club.toast(`签到成功！+${result.points} 积分`, 'success');
+          }
+        } catch (err) {
+          Club.toast(err.message || '签到失败', 'error');
+        }
+      });
+    };
+
+    window.changeMyPw = async function() {
+      const oldPw = document.getElementById('set-pw-old').value;
+      const newPw = document.getElementById('set-pw-new').value;
+      const newPw2 = document.getElementById('set-pw-new2').value;
+      if (!oldPw || !newPw) { Club.toast('请填写完整', 'error'); return; }
+      if (newPw.length < 6) { Club.toast('新密码至少6位', 'error'); return; }
+      if (newPw !== newPw2) { Club.toast('两次输入不一致', 'error'); return; }
+
+      const btn = document.querySelector('#tab-password .btn--primary');
+      await Club.btnLoading(btn, async () => {
+        try {
+          const res = await fetch('/api/auth/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('club_token') },
+            body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            Club.toast('密码修改成功，请重新登录', 'success');
+            setTimeout(() => { api.auth.logout(); }, 1500);
+          } else {
+            Club.toast(data.error || '修改失败', 'error');
+          }
+        } catch (e) {
+          Club.toast('修改失败', 'error');
+        }
+      });
+    };
+
+    // View records with pagination
+    let allRecords = [];
+    const RECORDS_PAGE_SIZE = 10;
+    let recordsPage = 1;
+
+    async function loadRecords(page) {
+      recordsPage = page || 1;
+      try {
+        if (!allRecords.length) allRecords = await api.user.getViewRecords();
+        const container = document.getElementById('records-list');
+
+        if (allRecords.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state__icon">📋</div>
+              <div class="empty-state__text">暂无查看记录</div>
+              <a href="list.html" class="btn btn--primary btn--sm mt-lg">去浏览资源</a>
+            </div>
+          `;
+          document.getElementById('records-pagination').innerHTML = '';
+          return;
+        }
+
+        const start = (recordsPage - 1) * RECORDS_PAGE_SIZE;
+        const pageRecords = allRecords.slice(start, start + RECORDS_PAGE_SIZE);
+
+        container.innerHTML = pageRecords.map(record => `
+          <div class="view-record" onclick="window.location.href='detail.html?id=${record.resourceId}'">
+            <div class="view-record__info">
+              <div class="view-record__title">${record.title}</div>
+              <div class="view-record__meta">
+                <span>${Club.getCategoryIcon(record.category)} ${Club.getCategoryName(record.category)}</span>
+                <span>${record.region}</span>
+                <span>查看于 ${Club.formatDate(record.viewedAt)}</span>
+              </div>
+            </div>
+            <span class="view-record__action">再次查看 →</span>
+          </div>
+        `).join('');
+
+        renderPagePag('records-pagination', allRecords.length, RECORDS_PAGE_SIZE, recordsPage, loadRecords);
+      } catch (e) {}
+    }
+    loadRecords(1);
+
+    // Transactions with pagination
+    let allTxs = [];
+    const TX_PAGE_SIZE = 15;
+    let txPage = 1;
+
+    async function loadTxs(page) {
+      txPage = page || 1;
+      try {
+        if (!allTxs.length) allTxs = await api.user.getTransactions();
+        const container = document.getElementById('tx-list');
+
+        if (allTxs.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state__icon">📊</div>
+              <div class="empty-state__text">暂无积分流水</div>
+            </div>
+          `;
+          document.getElementById('tx-pagination').innerHTML = '';
+          return;
+        }
+
+        const iconMap = {
+          'register_gift': { icon: '🎁', cls: 'gift' },
+          'recharge': { icon: '💎', cls: 'recharge' },
+          'view': { icon: '👁️', cls: 'view' },
+          'checkin': { icon: '📅', cls: 'gift' },
+          'admin_adjust': { icon: '⚙️', cls: 'recharge' },
+          'levelup': { icon: '⬆️', cls: 'recharge' },
+        };
+
+        const start = (txPage - 1) * TX_PAGE_SIZE;
+        const pageTxs = allTxs.slice(start, start + TX_PAGE_SIZE);
+
+        container.innerHTML = pageTxs.map(tx => {
+          const info = iconMap[tx.type] || { icon: '📋', cls: 'view' };
+          const isPositive = tx.amount > 0;
+          return `
+            <li class="tx-item">
+              <div class="tx-item__left">
+                <div class="tx-item__icon tx-item__icon--${info.cls}">${info.icon}</div>
+                <div>
+                  <div class="tx-item__desc">${tx.desc}</div>
+                  <div class="tx-item__time">${Club.formatDate(tx.createdAt)}</div>
+                </div>
+              </div>
+              <div class="tx-item__amount ${isPositive ? 'tx-item__amount--positive' : 'tx-item__amount--negative'}">
+                ${isPositive ? '+' : ''}${tx.amount}
+              </div>
+            </li>
+          `;
+        }).join('');
+
+        renderPagePag('tx-pagination', allTxs.length, TX_PAGE_SIZE, txPage, loadTxs);
+      } catch (e) {}
+    }
+    loadTxs(1);
+
+  })(); // end async
+  </script>
+</body>
+</html>

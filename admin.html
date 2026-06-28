@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 — 鼎脉人脉</title>
+  <link rel="icon" type="image/png" href="assets/icons8-teapot-material-outlined-32.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .admin-page { padding: var(--space-3xl) 0; min-height: 100vh; }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2xl); }
+    .admin-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: var(--space-md); margin-bottom: var(--space-2xl); }
+    .overview-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-xl); text-align: center; }
+    .overview-card__value { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--gold); }
+    .overview-card__label { font-size: 13px; color: var(--text-muted); margin-top: var(--space-xs); }
+    .admin-tabs { display: flex; gap: var(--space-lg); border-bottom: 1px solid var(--border); margin-bottom: var(--space-xl); overflow-x: auto; }
+    .admin-tab { padding: var(--space-md) 0; font-size: 14px; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+    .admin-tab:hover { color: var(--text-secondary); }
+    .admin-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .search-row { display: flex; gap: var(--space-md); margin-bottom: var(--space-xl); flex-wrap: wrap; align-items: center; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { text-align: left; padding: var(--space-md); font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: var(--space-md); border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+    .form-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; }
+    .form-overlay.active { opacity: 1; visibility: visible; }
+    .form-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-2xl); max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; }
+    .form-box::before { content: ''; display: block; height: 3px; background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark)); margin: calc(var(--space-2xl) * -1) calc(var(--space-2xl) * -1) var(--space-xl); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    textarea.form-input { min-height: 80px; resize: vertical; }
+    .login-box { max-width: 380px; margin: 100px auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-2xl); }
+    .empty { text-align: center; padding: var(--space-4xl); color: var(--text-muted); }
+    .order-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-xl); margin-bottom: var(--space-md); display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); }
+    .order-card:hover { border-color: var(--border-hover); }
+    .detail-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    .detail-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-2xl); max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
+    .thumb { width: 48px; height: 48px; border-radius: var(--radius-sm); object-fit: cover; background: var(--bg-elevated); }
+    @media(max-width:768px) { .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="admin-page">
+    <div class="container">
+      <!-- Login -->
+      <div id="sec-login">
+        <div class="login-box animate-fade-in-up">
+          <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl); text-align:center;">🔐 管理后台</h2>
+          <div class="form-group">
+            <label class="form-label">管理员账号</label>
+            <input type="text" class="form-input" id="login-user" value="admin">
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input type="password" class="form-input" id="login-pw" placeholder="输入密码" onkeyup="if(event.key==='Enter')doLogin()">
+          </div>
+          <button class="btn btn--primary btn--block" onclick="doLogin()">登录</button>
+          <div id="login-err" class="form-error mt-md" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="sec-dash" style="display:none">
+        <div class="admin-header">
+          <h1 class="admin-title">管理后台</h1>
+          <div style="display:flex;gap:var(--space-sm)">
+            <a href="index.html" class="btn btn--ghost btn--sm">前台</a>
+            <button class="btn btn--ghost btn--sm" onclick="doLogout()">退出</button>
+          </div>
+        </div>
+
+        <div class="overview-grid" id="overview"></div>
+
+        <div class="admin-tabs" id="main-tabs">
+          <div class="admin-tab active" data-tab="review">📋 审核管理</div>
+          <div class="admin-tab" data-tab="resources">📦 资源管理</div>
+          <div class="admin-tab" data-tab="orders">💰 订单管理</div>
+          <div class="admin-tab" data-tab="users">👥 用户管理</div>
+          <div class="admin-tab" data-tab="admins">🔑 管理员</div>
+          <div class="admin-tab" data-tab="categories">📁 分类管理</div>
+          <div class="admin-tab" data-tab="plans">💎 套餐管理</div>
+          <div class="admin-tab" data-tab="forum">💬 论坛管理</div>
+          <div class="admin-tab" data-tab="reports">🚨 举报管理</div>
+        </div>
+
+        <!-- Review -->
+        <div class="tab-panel active" id="panel-review">
+          <div class="admin-tabs" style="border:none;margin-bottom:var(--space-lg)">
+            <div class="admin-tab active" data-rstatus="pending">待审核</div>
+            <div class="admin-tab" data-rstatus="approved">已通过</div>
+            <div class="admin-tab" data-rstatus="rejected">已驳回</div>
+          </div>
+          <div id="review-list"></div>
+          <div id="review-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Resources -->
+        <div class="tab-panel" id="panel-resources">
+          <div class="search-row">
+            <input type="text" class="form-input" id="res-kw" placeholder="搜索..." style="flex:1;min-width:200px" onkeyup="if(event.key==='Enter')loadRes()">
+            <select class="form-input" id="res-cat" style="width:auto" onchange="loadRes()"><option value="">全部分类</option></select>
+            <button class="btn btn--primary btn--sm" onclick="loadRes()">搜索</button>
+            <button class="btn btn--primary btn--sm" onclick="openResForm()">+ 添加</button>
+          </div>
+          <div style="overflow-x:auto"><table class="data-table"><thead><tr>
+            <th>ID</th><th>图片</th><th>标题</th><th>分类</th><th>地区</th><th>价格</th><th>浏览</th><th>操作</th>
+          </tr></thead><tbody id="res-tbody"></tbody></table></div>
+          <div id="res-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Orders -->
+        <div class="tab-panel" id="panel-orders">
+          <div class="admin-tabs" style="border:none;margin-bottom:var(--space-lg)">
+            <div class="admin-tab" data-ostatus="all">全部</div>
+            <div class="admin-tab active" data-ostatus="confirming">待确认</div>
+            <div class="admin-tab" data-ostatus="paid">已到账</div>
+            <div class="admin-tab" data-ostatus="rejected">已驳回</div>
+          </div>
+          <div id="orders-list"></div>
+          <div id="orders-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Users -->
+        <div class="tab-panel" id="panel-users">
+          <div id="users-list"></div>
+          <div id="users-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Admins -->
+        <div class="tab-panel" id="panel-admins">
+          <div class="search-row">
+            <span style="flex:1;font-size:14px;color:var(--text-secondary)">管理员列表</span>
+            <button class="btn btn--primary btn--sm" onclick="openAdminForm()">+ 添加管理员</button>
+            <button class="btn btn--ghost btn--sm" onclick="openPwForm()">修改密码</button>
+          </div>
+          <div id="admins-list"></div>
+        </div>
+
+        <!-- Categories -->
+        <div class="tab-panel" id="panel-categories">
+          <div class="search-row">
+            <span style="flex:1;font-size:14px;color:var(--text-secondary)">分类列表</span>
+            <button class="btn btn--primary btn--sm" onclick="openCatForm()">+ 添加分类</button>
+          </div>
+          <div id="cats-list"></div>
+        </div>
+
+        <!-- Plans -->
+        <div class="tab-panel" id="panel-plans">
+          <div class="search-row">
+            <span style="flex:1;font-size:14px;color:var(--text-secondary)">充值套餐列表</span>
+            <button class="btn btn--primary btn--sm" onclick="openPlanForm()">+ 添加套餐</button>
+          </div>
+          <div id="plans-list"></div>
+        </div>
+
+        <!-- Forum -->
+        <div class="tab-panel" id="panel-forum">
+          <div class="admin-tabs" style="border:none;margin-bottom:var(--space-lg)">
+            <div class="admin-tab active" data-fstatus="normal">正常</div>
+            <div class="admin-tab" data-fstatus="hidden">已隐藏</div>
+          </div>
+          <div id="forum-list"></div>
+          <div id="forum-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Reports -->
+        <div class="tab-panel" id="panel-reports">
+          <div class="admin-tabs" style="border:none;margin-bottom:var(--space-lg)">
+            <div class="admin-tab active" data-repstatus="pending">待处理</div>
+            <div class="admin-tab" data-repstatus="resolved">已处理</div>
+          </div>
+          <div id="reports-list"></div>
+          <div id="reports-pagination" style="display:flex;justify-content:center;gap:var(--space-sm);margin-top:var(--space-xl);flex-wrap:wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resource Form -->
+  <div class="form-overlay" id="res-modal">
+    <div class="form-box">
+      <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:var(--space-xl)" id="res-form-title">添加资源</h3>
+      <input type="hidden" id="f-id">
+      <div class="form-group"><label class="form-label">标题 *</label><input type="text" class="form-input" id="f-title"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">分类 *</label><select class="form-input" id="f-category"></select></div>
+        <div class="form-group"><label class="form-label">地区 *</label><input type="text" class="form-input" id="f-region" placeholder="如：北京"></div>
+      </div>
+      <div class="form-group"><label class="form-label">积分价格 *</label><input type="number" class="form-input" id="f-price" placeholder="如：50"></div>
+      <div class="form-group"><label class="form-label">图片URL（选填）</label><input type="text" class="form-input" id="f-image" placeholder="https://example.com/image.jpg"><div style="font-size:12px;color:var(--text-dim);margin-top:4px">留空则不显示图片，可使用图床链接</div></div>
+      <div class="form-group">
+        <label class="form-label">介绍（免费可见，支持插入图片）*</label>
+        <div style="margin-bottom:var(--space-sm)">
+          <input type="file" id="intro-img-input" accept="image/*" style="display:none" onchange="uploadIntroImg(this)">
+          <button type="button" class="btn btn--ghost btn--sm" onclick="document.getElementById('intro-img-input').click()">📷 上传图片插入</button>
+          <span id="upload-status" style="font-size:12px;color:var(--text-dim);margin-left:var(--space-sm)"></span>
+        </div>
+        <textarea class="form-input" id="f-intro" style="min-height:120px" placeholder="支持HTML，上传图片后会自动插入<img>标签"></textarea>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">支持直接写HTML，如 &lt;img src="/uploads/xxx.jpg"&gt; 可插入图片</div>
+      </div>
+      <div class="form-group"><label class="form-label">联系方式（付费可见）*</label><textarea class="form-input" id="f-contact" placeholder="姓名、手机、邮箱、微信号等"></textarea></div>
+      <div class="form-group"><label class="form-label">标签（逗号分隔）</label><input type="text" class="form-input" id="f-tags" placeholder="风投,合伙人,TMT"></div>
+      <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+        <button class="btn btn--ghost" style="flex:1" onclick="closeResForm()">取消</button>
+        <button class="btn btn--primary" style="flex:1" onclick="saveRes()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Form -->
+  <div class="form-overlay" id="admin-modal">
+    <div class="form-box" style="max-width:400px">
+      <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:var(--space-xl)">添加管理员</h3>
+      <div class="form-group"><label class="form-label">用户名</label><input type="text" class="form-input" id="a-username"></div>
+      <div class="form-group"><label class="form-label">密码</label><input type="password" class="form-input" id="a-password"></div>
+      <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+        <button class="btn btn--ghost" style="flex:1" onclick="document.getElementById('admin-modal').classList.remove('active')">取消</button>
+        <button class="btn btn--primary" style="flex:1" onclick="saveAdmin()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Form -->
+  <div class="form-overlay" id="pw-modal">
+    <div class="form-box" style="max-width:400px">
+      <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:var(--space-xl)">修改密码</h3>
+      <div class="form-group"><label class="form-label">原密码</label><input type="password" class="form-input" id="pw-old"></div>
+      <div class="form-group"><label class="form-label">新密码</label><input type="password" class="form-input" id="pw-new"></div>
+      <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+        <button class="btn btn--ghost" style="flex:1" onclick="document.getElementById('pw-modal').classList.remove('active')">取消</button>
+        <button class="btn btn--primary" style="flex:1" onclick="changePw()">修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Form -->
+  <div class="form-overlay" id="cat-modal">
+    <div class="form-box" style="max-width:400px">
+      <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:var(--space-xl)" id="cat-form-title">添加分类</h3>
+      <input type="hidden" id="cat-edit-id">
+      <div class="form-group"><label class="form-label">分类ID（英文标识）</label><input type="text" class="form-input" id="cat-id" placeholder="如：finance"></div>
+      <div class="form-group"><label class="form-label">分类名称</label><input type="text" class="form-input" id="cat-name" placeholder="如：金融投资"></div>
+      <div class="form-group"><label class="form-label">图标（emoji）</label><input type="text" class="form-input" id="cat-icon" placeholder="如：💎"></div>
+      <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+        <button class="btn btn--ghost" style="flex:1" onclick="document.getElementById('cat-modal').classList.remove('active')">取消</button>
+        <button class="btn btn--primary" style="flex:1" onclick="saveCat()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan Form -->
+  <div class="form-overlay" id="plan-modal">
+    <div class="form-box" style="max-width:400px">
+      <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:var(--space-xl)" id="plan-form-title">添加套餐</h3>
+      <input type="hidden" id="plan-edit-id">
+      <div class="form-group"><label class="form-label">套餐名称</label><input type="text" class="form-input" id="plan-label" placeholder="如：体验包"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">积分数量</label><input type="number" class="form-input" id="plan-points" placeholder="如：100"></div>
+        <div class="form-group"><label class="form-label">价格（元）</label><input type="number" step="0.01" class="form-input" id="plan-price" placeholder="如：9.9"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">赠送积分</label><input type="number" class="form-input" id="plan-bonus" placeholder="0" value="0"></div>
+        <div class="form-group"><label class="form-label">热门标记</label><select class="form-input" id="plan-popular"><option value="0">否</option><option value="1">是</option></select></div>
+      </div>
+      <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+        <button class="btn btn--ghost" style="flex:1" onclick="document.getElementById('plan-modal').classList.remove('active')">取消</button>
+        <button class="btn btn--primary" style="flex:1" onclick="savePlan()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Detail Modal -->
+  <div class="form-overlay" id="user-detail-modal">
+    <div class="form-box" style="max-width:700px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xl)">
+        <h3 style="font-family:var(--font-display);font-size:20px" id="ud-title">用户详情</h3>
+        <button class="btn btn--ghost btn--sm" onclick="document.getElementById('user-detail-modal').classList.remove('active')">关闭</button>
+      </div>
+      <div id="ud-body"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const REGIONS = ['北京','上海','广州','深圳','杭州','成都','武汉','南京','重庆','西安','苏州','天津','长沙','郑州','青岛'];
+    let adminToken = localStorage.getItem('admin_token') || '';
+    let categories = [];
+
+    if (adminToken) showDash();
+
+    // ═══════════════════════════════════
+    // Auth
+    // ═══════════════════════════════════
+
+    async function doLogin() {
+      const username = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pw').value;
+      if (!username || !password) return;
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          adminToken = data.token;
+          localStorage.setItem('admin_token', adminToken);
+          showDash();
+        } else {
+          document.getElementById('login-err').textContent = data.error;
+          document.getElementById('login-err').style.display = '';
+        }
+      } catch (e) {
+        document.getElementById('login-err').textContent = '网络错误';
+        document.getElementById('login-err').style.display = '';
+      }
+    }
+
+    function doLogout() {
+      adminToken = '';
+      localStorage.removeItem('admin_token');
+      location.reload();
+    }
+
+    async function adminApi(path, options = {}) {
+      const res = await fetch('/api/admin' + path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': 'Bearer ' + adminToken,
+          ...(options.headers || {}),
+        },
+      });
+      if (res.status === 403) { doLogout(); return null; }
+      return res.json();
+    }
+
+    async function showDash() {
+      document.getElementById('sec-login').style.display = 'none';
+      document.getElementById('sec-dash').style.display = '';
+      await loadCats();
+      await loadOverview();
+      await loadRes();
+      initTabs();
+    }
+
+    // 通用分页渲染
+    // 分页函数注册表
+    const _pagFns = {};
+    function regPagFn(name, fn) { _pagFns[name] = fn; }
+
+    function renderAdminPag(containerId, total, pageSize, current, fnName) {
+      const container = document.getElementById(containerId);
+      const totalPages = Math.ceil(total / pageSize);
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      const call = (p) => `_pagFns['${fnName}'](${p})`;
+      let html = '';
+      if (current > 1) html += `<button class="btn btn--ghost btn--sm" onclick="${call(current-1)}">‹</button>`;
+      const s = Math.max(1, current-2), e = Math.min(totalPages, current+2);
+      if (s > 1) { html += `<button class="btn btn--ghost btn--sm" onclick="${call(1)}">1</button>`; if (s > 2) html += `<span style="color:var(--text-dim);padding:0 6px">···</span>`; }
+      for (let i = s; i <= e; i++) html += `<button class="btn ${i===current?'btn--primary':'btn--ghost'} btn--sm" onclick="${call(i)}">${i}</button>`;
+      if (e < totalPages) { if (e < totalPages-1) html += `<span style="color:var(--text-dim);padding:0 6px">···</span>`; html += `<button class="btn btn--ghost btn--sm" onclick="${call(totalPages)}">${totalPages}</button>`; }
+      if (current < totalPages) html += `<button class="btn btn--ghost btn--sm" onclick="${call(current+1)}">›</button>`;
+      html += `<span style="color:var(--text-dim);font-size:12px;margin-left:var(--space-sm)">共 ${total} 条</span>`;
+      container.innerHTML = html;
+    }
+
+    async function loadOverview() {
+      const d = await adminApi('/overview');
+      if (!d) return;
+      document.getElementById('overview').innerHTML = `
+        <div class="overview-card"><div class="overview-card__value">${d.totalResources}</div><div class="overview-card__label">资源</div></div>
+        <div class="overview-card"><div class="overview-card__value">${d.totalUsers}</div><div class="overview-card__label">用户</div></div>
+        <div class="overview-card"><div class="overview-card__value">${d.totalOrders}</div><div class="overview-card__label">成交</div></div>
+        <div class="overview-card"><div class="overview-card__value" style="color:var(--accent-green)">¥${d.totalRevenue.toFixed(2)}</div><div class="overview-card__label">收入</div></div>
+        <div class="overview-card"><div class="overview-card__value" style="color:var(--accent-blue)">${d.pendingOrders}</div><div class="overview-card__label">待确认</div></div>
+        <div class="overview-card"><div class="overview-card__value">${d.totalViews}</div><div class="overview-card__label">总浏览</div></div>
+      `;
+    }
+
+    async function loadCats() {
+      categories = await fetch('/api/categories').then(r => r.json());
+      const opts = categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+      document.getElementById('res-cat').innerHTML = '<option value="">全部分类</option>' + opts;
+      document.getElementById('f-category').innerHTML = opts;
+    }
+
+    function initTabs() {
+      document.querySelectorAll('#main-tabs .admin-tab').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('#main-tabs .admin-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+          if (tab.dataset.tab === 'orders') loadOrders();
+          if (tab.dataset.tab === 'users') loadUsers();
+          if (tab.dataset.tab === 'admins') loadAdmins();
+        };
+      });
+      document.querySelectorAll('[data-ostatus]').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('[data-ostatus]').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          loadOrders(tab.dataset.ostatus);
+        };
+      });
+    }
+
+    // ═══════════════════════════════════
+    // Resources (with pagination)
+    // ═══════════════════════════════════
+
+    let resPage = 1;
+    const RES_PAGE_SIZE = 15;
+
+    async function loadRes(page) {
+      resPage = page || 1;
+      const keyword = document.getElementById('res-kw').value;
+      const category = document.getElementById('res-cat').value;
+      const data = await adminApi(`/resources?keyword=${encodeURIComponent(keyword)}&category=${category}&page=${resPage}&limit=${RES_PAGE_SIZE}`);
+      if (!data) return;
+
+      document.getElementById('res-tbody').innerHTML = data.resources.map(r => `
+        <tr>
+          <td style="color:var(--text-dim)">${r.id}</td>
+          <td>${r.image ? `<img src="${r.image}" class="thumb" onerror="this.style.display='none'">` : '<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:10px">无</div>'}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600" title="${r.title}">${r.title}</td>
+          <td><span class="badge badge--gold">${r.categoryName || r.category}</span></td>
+          <td>${r.region}</td>
+          <td style="color:var(--gold);font-weight:600">${r.price}</td>
+          <td>${r.views}</td>
+          <td>
+            <button class="btn btn--ghost btn--sm" onclick="editRes(${r.id})">编辑</button>
+            <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="delRes(${r.id},'${r.title.replace(/'/g,"\\'")}')">删除</button>
+          </td>
+        </tr>
+      `).join('');
+
+      regPagFn('loadRes', loadRes);
+      renderAdminPag('res-pagination', data.total, RES_PAGE_SIZE, resPage, 'loadRes');
+    }
+
+    function openResForm(r) {
+      document.getElementById('res-form-title').textContent = r ? '编辑资源' : '添加资源';
+      document.getElementById('f-id').value = r ? r.id : '';
+      document.getElementById('f-title').value = r ? r.title : '';
+      document.getElementById('f-category').value = r ? r.category : categories[0]?.id || '';
+      document.getElementById('f-region').value = r ? r.region : '';
+      document.getElementById('f-price').value = r ? r.price : '';
+      document.getElementById('f-image').value = r ? (r.image || '') : '';
+      document.getElementById('f-intro').value = r ? r.intro : '';
+      document.getElementById('f-contact').value = r ? r.contact : '';
+      document.getElementById('f-tags').value = r ? r.tags.join(',') : '';
+      document.getElementById('res-modal').classList.add('active');
+    }
+
+    function closeResForm() { document.getElementById('res-modal').classList.remove('active'); }
+
+    async function editRes(id) {
+      const data = await adminApi(`/resources?keyword=&limit=50`);
+      if (!data) return;
+      const r = data.resources.find(x => x.id === id);
+      if (r) openResForm(r);
+    }
+
+    async function saveRes() {
+      const id = document.getElementById('f-id').value;
+      const body = {
+        title: document.getElementById('f-title').value.trim(),
+        category: document.getElementById('f-category').value,
+        region: document.getElementById('f-region').value.trim(),
+        price: Math.round(Number(document.getElementById('f-price').value)),
+        image: document.getElementById('f-image').value.trim(),
+        intro: document.getElementById('f-intro').value.trim(),
+        contact: document.getElementById('f-contact').value.trim(),
+        tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      };
+      if (!body.title || !body.category || !body.region || !body.price || !body.intro || !body.contact) {
+        alert('请填写完整信息'); return;
+      }
+      const url = id ? `/resources/${id}` : '/resources';
+      const method = id ? 'PUT' : 'POST';
+      const result = await adminApi(url, { method, body: JSON.stringify(body) });
+      if (result && result.success) {
+        closeResForm(); loadRes(); loadOverview();
+      } else {
+        alert(result?.error || '操作失败');
+      }
+    }
+
+    // 上传图片并插入到介绍
+    async function uploadIntroImg(input) {
+      const file = input.files[0];
+      if (!file) return;
+      document.getElementById('upload-status').textContent = '上传中...';
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'X-Admin-Token': 'Bearer ' + adminToken },
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success) {
+          const textarea = document.getElementById('f-intro');
+          const imgTag = `<img src="${data.url}" style="max-width:100%;border-radius:8px;margin:8px 0">`;
+          const pos = textarea.selectionStart;
+          textarea.value = textarea.value.substring(0, pos) + '\n' + imgTag + '\n' + textarea.value.substring(pos);
+          document.getElementById('upload-status').textContent = '✅ 已插入';
+          setTimeout(() => { document.getElementById('upload-status').textContent = ''; }, 2000);
+        } else {
+          document.getElementById('upload-status').textContent = '❌ ' + (data.error || '上传失败');
+        }
+      } catch (e) {
+        document.getElementById('upload-status').textContent = '❌ 上传失败';
+      }
+      input.value = '';
+    }
+
+    async function delRes(id, title) {
+      if (!(await Club.confirm({ title: '删除资源', message: `确认删除「${title}」？`, confirmText: '删除', type: 'danger' }))) return;
+      const result = await adminApi(`/resources/${id}`, { method: 'DELETE' });
+      if (result && result.success) { loadRes(); loadOverview(); }
+    }
+
+    // ═══════════════════════════════════
+    // Orders
+    // ═══════════════════════════════════
+
+    let orderStatus = 'confirming';
+    let ordersPage = 1;
+    const ORDERS_PAGE_SIZE = 20;
+
+    async function loadOrders(status, page) {
+      if (status) orderStatus = status;
+      ordersPage = page || 1;
+      const data = await adminApi(`/orders?status=${orderStatus}&page=${ordersPage}&limit=${ORDERS_PAGE_SIZE}`);
+      if (!data) return;
+      const container = document.getElementById('orders-list');
+      if (!data.orders.length) { container.innerHTML = '<div class="empty">暂无订单</div>'; document.getElementById('orders-pagination').innerHTML = ''; return; }
+      const statusBadge = {
+        'pending': '<span class="badge" style="background:rgba(100,100,100,0.2);color:#888">待支付</span>',
+        'confirming': '<span class="badge badge--gold">待确认</span>',
+        'paid': '<span class="badge badge--green">已到账</span>',
+        'rejected': '<span class="badge badge--red">已驳回</span>',
+      };
+
+      container.innerHTML = data.orders.map(o => `
+        <div class="order-card">
+          <div style="flex:1">
+            <div style="font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:var(--space-sm)">
+              ${o.username}
+              <span style="color:var(--text-dim);font-size:12px;font-weight:400">${o.orderNo}</span>
+              ${statusBadge[o.status] || ''}
+            </div>
+            <div style="font-size:13px;color:var(--text-muted)">充值 ${o.points} 积分 · ${o.createdAt}${o.paidAt ? ' · 到账：' + o.paidAt : ''}${o.remark ? ' · 备注：' + o.remark : ''}</div>
+          </div>
+          <div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--gold)">¥${o.amount}</div>
+          ${orderStatus === 'confirming' ? `
+            <div style="display:flex;gap:var(--space-sm);flex-direction:column">
+              <button class="btn btn--primary btn--sm" onclick="approveOrder('${o.orderNo}')">确认到账</button>
+              <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="rejectOrder('${o.orderNo}')">驳回</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+      regPagFn('loadOrdersPag', (p) => loadOrders(null, p));
+      renderAdminPag('orders-pagination', data.total, ORDERS_PAGE_SIZE, ordersPage, 'loadOrdersPag');
+    }
+
+    async function approveOrder(orderNo) {
+      if (!(await Club.confirm({ title: '确认到账', message: '确认该订单已到账？确认后将自动为用户充值积分。', confirmText: '确认到账', type: 'success' }))) return;
+      const r = await adminApi('/orders/approve', { method: 'POST', body: JSON.stringify({ orderNo }) });
+      if (r && r.success) { alert('已确认到账，积分已加'); loadOrders(null, ordersPage); loadOverview(); }
+      else alert(r?.error || '操作失败');
+    }
+
+    async function rejectOrder(orderNo) {
+      const reason = prompt('驳回原因（选填）');
+      if (reason === null) return;
+      await adminApi('/orders/reject', { method: 'POST', body: JSON.stringify({ orderNo, reason }) });
+      loadOrders(null, ordersPage);
+    }
+
+    // ═══════════════════════════════════
+    // Users
+    // ═══════════════════════════════════
+
+    let usersPage = 1;
+    const USERS_PAGE_SIZE = 20;
+
+    async function loadUsers(page) {
+      usersPage = page || 1;
+      const data = await adminApi(`/users?page=${usersPage}&limit=${USERS_PAGE_SIZE}`);
+      if (!data) return;
+      const container = document.getElementById('users-list');
+      if (!data.users.length) { container.innerHTML = '<div class="empty">暂无用户</div>'; return; }
+      container.innerHTML = `<table class="data-table"><thead><tr>
+        <th>ID</th><th>用户名</th><th>积分</th><th>查看</th><th>充值</th><th>消费</th><th>注册时间</th><th>操作</th>
+      </tr></thead><tbody>${data.users.map(u => `
+        <tr>
+          <td style="color:var(--text-dim)">${u.id}</td>
+          <td style="font-weight:600">${u.username}</td>
+          <td style="color:var(--gold)">${u.points}</td>
+          <td>${u.viewCount}</td>
+          <td>${u.orderCount}</td>
+          <td>¥${u.totalSpent.toFixed(2)}</td>
+          <td style="color:var(--text-muted);font-size:13px">${u.createdAt}</td>
+          <td>
+            <button class="btn btn--ghost btn--sm" onclick="showUserDetail(${u.id})">详情</button>
+            <button class="btn btn--ghost btn--sm" onclick="adjustPoints(${u.id},'${u.username}')">调积分</button>
+          </td>
+        </tr>
+      `).join('')}</tbody></table>`;
+      regPagFn('loadUsers', loadUsers);
+      renderAdminPag('users-pagination', data.total, USERS_PAGE_SIZE, usersPage, 'loadUsers');
+    }
+
+    async function showUserDetail(userId) {
+      const data = await adminApi(`/users/${userId}`);
+      if (!data) return;
+      const u = data.user;
+      document.getElementById('ud-title').textContent = `${u.username} 的详情`;
+      document.getElementById('ud-body').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-xl)">
+          <div style="text-align:center;padding:var(--space-md);background:var(--bg-glass-light);border-radius:var(--radius-md)">
+            <div style="font-size:24px;font-weight:700;color:var(--gold)">${u.points}</div><div style="font-size:12px;color:var(--text-muted)">积分</div>
+          </div>
+          <div style="text-align:center;padding:var(--space-md);background:var(--bg-glass-light);border-radius:var(--radius-md)">
+            <div style="font-size:24px;font-weight:700;color:var(--text-primary)">${data.records.length}</div><div style="font-size:12px;color:var(--text-muted)">查看记录</div>
+          </div>
+          <div style="text-align:center;padding:var(--space-md);background:var(--bg-glass-light);border-radius:var(--radius-md)">
+            <div style="font-size:24px;font-weight:700;color:var(--text-primary)">${data.transactions.length}</div><div style="font-size:12px;color:var(--text-muted)">交易流水</div>
+          </div>
+        </div>
+        <h4 style="margin-bottom:var(--space-md);color:var(--text-secondary)">查看记录</h4>
+        ${data.records.length ? `<div style="max-height:200px;overflow-y:auto;margin-bottom:var(--space-xl)">${data.records.map(r => `
+          <div style="padding:var(--space-sm) 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between">
+            <span>${r.title}</span><span style="color:var(--text-dim)">${r.viewedAt}</span>
+          </div>
+        `).join('')}</div>` : '<p style="color:var(--text-dim);margin-bottom:var(--space-xl)">暂无</p>'}
+        <h4 style="margin-bottom:var(--space-md);color:var(--text-secondary)">交易流水</h4>
+        ${data.transactions.length ? `<div style="max-height:200px;overflow-y:auto">${data.transactions.map(t => `
+          <div style="padding:var(--space-sm) 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between">
+            <span>${t.desc}</span>
+            <span style="color:${t.amount > 0 ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:600">${t.amount > 0 ? '+' : ''}${t.amount}</span>
+          </div>
+        `).join('')}</div>` : '<p style="color:var(--text-dim)">暂无</p>'}
+      `;
+      document.getElementById('user-detail-modal').classList.add('active');
+    }
+
+    async function adjustPoints(userId, username) {
+      const amount = prompt(`给「${username}」调整积分（正数增加，负数减少）：`);
+      if (amount === null || !amount) return;
+      const desc = prompt('调整原因：') || '管理员调整';
+      const r = await adminApi(`/users/${userId}/points`, {
+        method: 'POST',
+        body: JSON.stringify({ amount: parseInt(amount), desc }),
+      });
+      if (r && r.success) { alert(`调整成功，当前积分：${r.newBalance}`); loadUsers(); }
+      else alert(r?.error || '操作失败');
+    }
+
+    // ═══════════════════════════════════
+    // Admins
+    // ═══════════════════════════════════
+
+    async function loadAdmins() {
+      const data = await adminApi('/admins');
+      if (!data) return;
+      document.getElementById('admins-list').innerHTML = `<table class="data-table"><thead><tr>
+        <th>ID</th><th>用户名</th><th>创建时间</th><th>操作</th>
+      </tr></thead><tbody>${data.map(a => `
+        <tr>
+          <td style="color:var(--text-dim)">${a.id}</td>
+          <td style="font-weight:600">${a.username}</td>
+          <td style="color:var(--text-muted)">${a.createdAt}</td>
+          <td><button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="delAdmin(${a.id},'${a.username}')">删除</button></td>
+        </tr>
+      `).join('')}</tbody></table>`;
+    }
+
+    function openAdminForm() { document.getElementById('admin-modal').classList.add('active'); }
+
+    async function saveAdmin() {
+      const username = document.getElementById('a-username').value.trim();
+      const password = document.getElementById('a-password').value;
+      if (!username || !password) { alert('请填写完整'); return; }
+      const r = await adminApi('/admins', { method: 'POST', body: JSON.stringify({ username, password }) });
+      if (r && r.success) { document.getElementById('admin-modal').classList.remove('active'); loadAdmins(); }
+      else alert(r?.error || '操作失败');
+    }
+
+    async function delAdmin(id, username) {
+      if (!(await Club.confirm({ title: '删除管理员', message: `确认删除管理员「${username}」？`, confirmText: '删除', type: 'danger' }))) return;
+      const r = await adminApi(`/admins/${id}`, { method: 'DELETE' });
+      if (r && r.success) loadAdmins();
+      else alert(r?.error || '操作失败');
+    }
+
+    function openPwForm() { document.getElementById('pw-modal').classList.add('active'); }
+
+    async function changePw() {
+      const oldPassword = document.getElementById('pw-old').value;
+      const newPassword = document.getElementById('pw-new').value;
+      if (!oldPassword || !newPassword) { alert('请填写完整'); return; }
+      const r = await adminApi('/password', { method: 'PUT', body: JSON.stringify({ oldPassword, newPassword }) });
+      if (r && r.success) { alert('密码修改成功，请重新登录'); doLogout(); }
+      else alert(r?.error || '操作失败');
+    }
+
+    // 审核详情弹窗
+    function showReviewDetail(id) {
+      const r = reviewData.find(x => x.id === id);
+      if (!r) return;
+
+      const existing = document.getElementById('review-detail-modal');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'form-overlay active';
+      overlay.id = 'review-detail-modal';
+      overlay.innerHTML = `
+        <div class="form-box" style="max-width:650px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xl)">
+            <h3 style="font-family:var(--font-display);font-size:20px">资源详情</h3>
+            <button class="btn btn--ghost btn--sm" onclick="document.getElementById('review-detail-modal').remove()">关闭</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-lg)">
+            <div><span style="color:var(--text-dim);font-size:12px">标题</span><div style="font-weight:600">${r.title}</div></div>
+            <div><span style="color:var(--text-dim);font-size:12px">分类</span><div>${r.categoryName || r.category}</div></div>
+            <div><span style="color:var(--text-dim);font-size:12px">地区</span><div>${r.region}</div></div>
+            <div><span style="color:var(--text-dim);font-size:12px">积分价格</span><div style="color:var(--gold);font-weight:600">${r.price} 积分</div></div>
+            <div><span style="color:var(--text-dim);font-size:12px">发布者</span><div>${r.submitter}</div></div>
+            <div><span style="color:var(--text-dim);font-size:12px">发布时间</span><div>${r.createdAt}</div></div>
+          </div>
+
+          ${r.image ? `<div style="margin-bottom:var(--space-lg)"><img src="${r.image}" style="max-width:100%;border-radius:var(--radius-md)"></div>` : ''}
+
+          <div style="margin-bottom:var(--space-lg)">
+            <div style="color:var(--text-dim);font-size:12px;margin-bottom:var(--space-sm)">资源介绍</div>
+            <div style="font-size:14px;color:var(--text-secondary);line-height:1.8;background:var(--bg-glass-light);padding:var(--space-lg);border-radius:var(--radius-md);max-height:200px;overflow-y:auto">${r.intro}</div>
+          </div>
+
+          <div style="margin-bottom:var(--space-lg)">
+            <div style="color:var(--text-dim);font-size:12px;margin-bottom:var(--space-sm)">联系方式（付费可见）</div>
+            <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-secondary);background:var(--bg-glass-light);padding:var(--space-lg);border-radius:var(--radius-md);white-space:pre-line">${r.contact}</div>
+          </div>
+
+          <div style="margin-bottom:var(--space-lg)">
+            <div style="color:var(--text-dim);font-size:12px;margin-bottom:var(--space-sm)">标签</div>
+            <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          </div>
+
+          ${reviewStatus === 'pending' ? `
+            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl)">
+              <button class="btn btn--ghost" style="flex:1;color:var(--accent-red)" onclick="rejectSubmission(${r.id});document.getElementById('review-detail-modal').remove()">驳回</button>
+              <button class="btn btn--primary" style="flex:1" onclick="approveSubmission(${r.id});document.getElementById('review-detail-modal').remove()">审核通过</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+    }
+
+    // 缓存审核数据
+    let reviewData = [];
+
+    // 重写 loadReview 保存数据
+    const _origLoadReview = loadReview;
+    loadReview = async function(page) {
+      reviewPage = page || 1;
+      const data = await adminApi(`/submissions?status=${reviewStatus}&page=${reviewPage}&limit=${REVIEW_PAGE_SIZE}`);
+      if (!data) return;
+      reviewData = data.resources;
+      const container = document.getElementById('review-list');
+      if (!data.resources.length) {
+        container.innerHTML = '<div class="empty">暂无记录</div>';
+        document.getElementById('review-pagination').innerHTML = '';
+        return;
+      }
+      const statusMap = {
+        'pending': { text: '待审核', cls: 'badge--gold' },
+        'approved': { text: '已通过', cls: 'badge--green' },
+        'rejected': { text: '已驳回', cls: 'badge--red' },
+      };
+      container.innerHTML = data.resources.map(r => {
+        const st = statusMap[r.status] || { text: r.status, cls: '' };
+        return `
+          <div class="order-card" style="cursor:pointer;flex-direction:column;align-items:flex-start;gap:var(--space-md)" onclick="showReviewDetail(${r.id})">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <div style="font-weight:600;font-size:15px;margin-bottom:4px">${r.title}</div>
+                <div style="font-size:13px;color:var(--text-muted);display:flex;gap:var(--space-md);flex-wrap:wrap">
+                  <span class="badge ${st.cls}">${st.text}</span>
+                  <span>${r.categoryName || r.category}</span>
+                  <span>${r.region}</span>
+                  <span style="color:var(--gold)">${r.price} 积分</span>
+                  <span>发布者：${r.submitter}</span>
+                </div>
+              </div>
+              ${reviewStatus === 'pending' ? `
+                <div style="display:flex;gap:var(--space-sm)" onclick="event.stopPropagation()">
+                  <button class="btn btn--primary btn--sm" onclick="approveSubmission(${r.id})">通过</button>
+                  <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="rejectSubmission(${r.id})">驳回</button>
+                </div>
+              ` : ''}
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;max-height:60px;overflow:hidden">${r.intro.replace(/<[^>]*>/g, '').substring(0, 150)}...</div>
+            ${r.rejectReason ? `<div style="font-size:12px;color:var(--accent-red)">驳回原因：${r.rejectReason}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+      regPagFn('loadReview', loadReview); renderAdminPag('review-pagination', data.total, REVIEW_PAGE_SIZE, reviewPage, 'loadReview');
+    };
+
+    // ═══════════════════════════════════
+    // Categories
+    // ═══════════════════════════════════
+
+    // ═══════════════════════════════════
+    // Review (审核管理)
+    // ═══════════════════════════════════
+
+    let reviewStatus = 'pending';
+    let reviewPage = 1;
+    const REVIEW_PAGE_SIZE = 15;
+
+    // Review tab switching
+    document.querySelectorAll('[data-rstatus]').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('[data-rstatus]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        reviewStatus = tab.dataset.rstatus;
+        loadReview(1);
+      };
+    });
+
+    async function loadReview(page) {
+      reviewPage = page || 1;
+      const data = await adminApi(`/submissions?status=${reviewStatus}&page=${reviewPage}&limit=${REVIEW_PAGE_SIZE}`);
+      if (!data) return;
+      const container = document.getElementById('review-list');
+      if (!data.resources.length) {
+        container.innerHTML = '<div class="empty">暂无记录</div>';
+        document.getElementById('review-pagination').innerHTML = '';
+        return;
+      }
+      const statusMap = {
+        'pending': { text: '待审核', cls: 'badge--gold' },
+        'approved': { text: '已通过', cls: 'badge--green' },
+        'rejected': { text: '已驳回', cls: 'badge--red' },
+      };
+      container.innerHTML = data.resources.map(r => {
+        const st = statusMap[r.status] || { text: r.status, cls: '' };
+        return `
+          <div class="order-card" style="flex-direction:column;align-items:flex-start;gap:var(--space-md)">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <div style="font-weight:600;font-size:15px;margin-bottom:4px">${r.title}</div>
+                <div style="font-size:13px;color:var(--text-muted);display:flex;gap:var(--space-md);flex-wrap:wrap">
+                  <span class="badge ${st.cls}">${st.text}</span>
+                  <span>${r.categoryName || r.category}</span>
+                  <span>${r.region}</span>
+                  <span style="color:var(--gold)">${r.price} 积分</span>
+                  <span>发布者：${r.submitter}</span>
+                </div>
+              </div>
+              ${reviewStatus === 'pending' ? `
+                <div style="display:flex;gap:var(--space-sm)">
+                  <button class="btn btn--primary btn--sm" onclick="approveSubmission(${r.id})">通过</button>
+                  <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="rejectSubmission(${r.id})">驳回</button>
+                </div>
+              ` : ''}
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;max-height:60px;overflow:hidden">${r.intro.replace(/<[^>]*>/g, '').substring(0, 150)}...</div>
+            ${r.rejectReason ? `<div style="font-size:12px;color:var(--accent-red)">驳回原因：${r.rejectReason}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+      regPagFn('loadReview', loadReview); renderAdminPag('review-pagination', data.total, REVIEW_PAGE_SIZE, reviewPage, 'loadReview');
+    }
+
+    async function approveSubmission(id) {
+      if (!(await Club.confirm({ title: '审核通过', message: '确认通过该资源？通过后将在前台展示。', confirmText: '通过', type: 'success' }))) return;
+      const r = await adminApi(`/submissions/${id}/approve`, { method: 'POST' });
+      if (r && r.success) { alert('已通过'); loadReview(reviewPage); loadOverview(); }
+    }
+
+    async function rejectSubmission(id) {
+      const reason = prompt('驳回原因（选填）：');
+      if (reason === null) return;
+      const r = await adminApi(`/submissions/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
+      if (r && r.success) { alert('已驳回'); loadReview(reviewPage); }
+    }
+
+    // ═══════════════════════════════════
+    // Forum Management
+    // ═══════════════════════════════════
+
+    let forumStatus = 'normal';
+    let forumPage = 1;
+    const FORUM_PAGE_SIZE = 15;
+
+    document.querySelectorAll('[data-fstatus]').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('[data-fstatus]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        forumStatus = tab.dataset.fstatus;
+        loadForumPosts(1);
+      };
+    });
+
+    async function loadForumPosts(page) {
+      forumPage = page || 1;
+      const data = await adminApi(`/posts?status=${forumStatus}&page=${forumPage}&limit=${FORUM_PAGE_SIZE}`);
+      if (!data) return;
+      const container = document.getElementById('forum-list');
+      if (!data.posts.length) {
+        container.innerHTML = '<div class="empty">暂无帖子</div>';
+        document.getElementById('forum-pagination').innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:5%">ID</th>
+                <th style="width:30%">标题</th>
+                <th style="width:10%">作者</th>
+                <th style="width:8%">点赞</th>
+                <th style="width:8%">回复</th>
+                <th style="width:17%">时间</th>
+                <th style="width:22%">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.posts.map(p => {
+                const plainContent = (p.content || '').replace(/<[^>]*>/g, '').replace(/\n/g, ' ').substring(0, 60);
+                return '<tr>' +
+                  '<td style="color:var(--text-dim)">' + p.id + '</td>' +
+                  '<td>' +
+                    '<div style="font-weight:600;font-size:14px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.title + '</div>' +
+                    '<div style="font-size:12px;color:var(--text-dim);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">' + plainContent + '</div>' +
+                  '</td>' +
+                  '<td style="font-size:13px">' + p.author + '</td>' +
+                  '<td style="text-align:center;color:var(--accent-red)">' + p.likesCount + '</td>' +
+                  '<td style="text-align:center">' + p.repliesCount + '</td>' +
+                  '<td style="font-size:12px;color:var(--text-dim)">' + p.createdAt + '</td>' +
+                  '<td>' +
+                    '<div style="display:flex;gap:4px;flex-wrap:wrap">' +
+                      (forumStatus === 'normal'
+                        ? '<button class="btn btn--ghost btn--sm" onclick="hidePost(' + p.id + ')">隐藏</button>'
+                        : '<button class="btn btn--primary btn--sm" onclick="restorePost(' + p.id + ')">恢复</button>') +
+                      '<button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="deletePost(' + p.id + ')">删除</button>' +
+                    '</div>' +
+                  '</td>' +
+                '</tr>';
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      regPagFn('loadForumPosts', loadForumPosts); renderAdminPag('forum-pagination', data.total, FORUM_PAGE_SIZE, forumPage, 'loadForumPosts');
+    }
+
+    async function hidePost(id) {
+      if (!(await Club.confirm({ title: '隐藏帖子', message: '确认隐藏该帖子？隐藏后前台不可见。', confirmText: '隐藏', type: 'danger' }))) return;
+      await adminApi(`/posts/${id}/hide`, { method: 'POST' });
+      loadForumPosts(forumPage);
+    }
+
+    async function restorePost(id) {
+      await adminApi(`/posts/${id}/restore`, { method: 'POST' });
+      loadForumPosts(forumPage);
+    }
+
+    async function deletePost(id) {
+      if (!(await Club.confirm({ title: '删除帖子', message: '确认删除该帖子？', confirmText: '删除', type: 'danger' }))) return;
+      await adminApi(`/posts/${id}`, { method: 'DELETE' });
+      loadForumPosts(forumPage);
+    }
+
+    // ═══════════════════════════════════
+    // Reports Management
+    // ═══════════════════════════════════
+
+    let reportStatus = 'pending';
+    let reportPage = 1;
+    const REPORT_PAGE_SIZE = 15;
+
+    document.querySelectorAll('[data-repstatus]').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('[data-repstatus]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        reportStatus = tab.dataset.repstatus;
+        loadReports(1);
+      };
+    });
+
+    async function loadReports(page) {
+      reportPage = page || 1;
+      const data = await adminApi(`/reports?status=${reportStatus}&page=${reportPage}&limit=${REPORT_PAGE_SIZE}`);
+      if (!data) return;
+      const container = document.getElementById('reports-list');
+      if (!data.reports.length) {
+        container.innerHTML = '<div class="empty">暂无举报</div>';
+        document.getElementById('reports-pagination').innerHTML = '';
+        return;
+      }
+      const typeMap = { 'post': '帖子', 'reply': '回复' };
+      container.innerHTML = `
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:5%">ID</th>
+                <th style="width:10%">类型</th>
+                <th style="width:25%">被举报内容</th>
+                <th style="width:10%">举报人</th>
+                <th style="width:15%">原因</th>
+                <th style="width:15%">时间</th>
+                <th style="width:20%">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.reports.map(r => {
+                const summary = (r.targetSummary || '').substring(0, 30);
+                return '<tr>' +
+                  '<td style="color:var(--text-dim)">' + r.id + '</td>' +
+                  '<td><span class="badge badge--gold">' + (typeMap[r.targetType] || r.targetType) + '</span></td>' +
+                  '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (r.targetSummary || '') + '">' + summary + '</td>' +
+                  '<td>' + r.reporter + '</td>' +
+                  '<td style="font-size:13px">' + r.reason + '</td>' +
+                  '<td style="font-size:12px;color:var(--text-dim)">' + r.createdAt + '</td>' +
+                  '<td>' +
+                    (reportStatus === 'pending'
+                      ? '<div style="display:flex;gap:4px"><button class="btn btn--ghost btn--sm" onclick="resolveReport(' + r.id + ', \'dismiss\')">驳回</button><button class="btn btn--primary btn--sm" onclick="resolveReport(' + r.id + ', \'hide\')">隐藏</button></div>'
+                      : (r.adminNote ? '<span style="font-size:12px;color:var(--text-dim)">' + r.adminNote + '</span>' : '<span style="font-size:12px;color:var(--accent-green)">已处理</span>')) +
+                  '</td>' +
+                '</tr>';
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      regPagFn('loadReports', loadReports); renderAdminPag('reports-pagination', data.total, REPORT_PAGE_SIZE, reportPage, 'loadReports');
+    }
+
+    async function resolveReport(id, action) {
+      const note = action === 'hide' ? prompt('处理备注（选填）：') : '';
+      if (note === null) return;
+      await adminApi(`/reports/${id}/resolve`, { method: 'POST', body: JSON.stringify({ action, adminNote: note }) });
+      loadReports(reportPage);
+    }
+
+    async function loadCatsAdmin() {
+      const data = await adminApi('/categories');
+      if (!data) return;
+      document.getElementById('cats-list').innerHTML = `<table class="data-table"><thead><tr>
+        <th>ID</th><th>图标</th><th>名称</th><th>资源数</th><th>操作</th>
+      </tr></thead><tbody>${data.map(c => `
+        <tr>
+          <td style="color:var(--text-dim)">${c.id}</td>
+          <td style="font-size:24px">${c.icon}</td>
+          <td style="font-weight:600">${c.name}</td>
+          <td>${c.count}</td>
+          <td>
+            <button class="btn btn--ghost btn--sm" onclick="editCat('${c.id}','${c.name}','${c.icon}')">编辑</button>
+            <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="delCat('${c.id}','${c.name}')">删除</button>
+          </td>
+        </tr>
+      `).join('')}</tbody></table>`;
+    }
+
+    function openCatForm() {
+      document.getElementById('cat-form-title').textContent = '添加分类';
+      document.getElementById('cat-edit-id').value = '';
+      document.getElementById('cat-id').value = '';
+      document.getElementById('cat-id').disabled = false;
+      document.getElementById('cat-name').value = '';
+      document.getElementById('cat-icon').value = '';
+      document.getElementById('cat-modal').classList.add('active');
+    }
+
+    function editCat(id, name, icon) {
+      document.getElementById('cat-form-title').textContent = '编辑分类';
+      document.getElementById('cat-edit-id').value = id;
+      document.getElementById('cat-id').value = id;
+      document.getElementById('cat-id').disabled = true;
+      document.getElementById('cat-name').value = name;
+      document.getElementById('cat-icon').value = icon;
+      document.getElementById('cat-modal').classList.add('active');
+    }
+
+    async function saveCat() {
+      const editId = document.getElementById('cat-edit-id').value;
+      const body = {
+        id: document.getElementById('cat-id').value.trim(),
+        name: document.getElementById('cat-name').value.trim(),
+        icon: document.getElementById('cat-icon').value.trim(),
+      };
+      if (!body.id || !body.name || !body.icon) { alert('请填写完整'); return; }
+      const url = editId ? `/categories/${editId}` : '/categories';
+      const method = editId ? 'PUT' : 'POST';
+      const r = await adminApi(url, { method, body: JSON.stringify(body) });
+      if (r && r.success) { document.getElementById('cat-modal').classList.remove('active'); loadCatsAdmin(); loadCats(); }
+      else alert(r?.error || '操作失败');
+    }
+
+    async function delCat(id, name) {
+      if (!(await Club.confirm({ title: '删除分类', message: `确认删除分类「${name}」？`, confirmText: '删除', type: 'danger' }))) return;
+      const r = await adminApi(`/categories/${id}`, { method: 'DELETE' });
+      if (r && r.success) loadCatsAdmin();
+      else alert(r?.error || '操作失败');
+    }
+
+    // ═══════════════════════════════════
+    // Plans
+    // ═══════════════════════════════════
+
+    async function loadPlansAdmin() {
+      const data = await adminApi('/plans');
+      if (!data) return;
+      document.getElementById('plans-list').innerHTML = `<table class="data-table"><thead><tr>
+        <th>ID</th><th>名称</th><th>积分</th><th>价格</th><th>赠送</th><th>热门</th><th>操作</th>
+      </tr></thead><tbody>${data.map(p => `
+        <tr>
+          <td style="color:var(--text-dim)">${p.id}</td>
+          <td style="font-weight:600">${p.label}</td>
+          <td style="color:var(--gold)">${p.points}</td>
+          <td>¥${p.price}</td>
+          <td>${p.bonus || '-'}</td>
+          <td>${p.popular ? '⭐' : '-'}</td>
+          <td>
+            <button class="btn btn--ghost btn--sm" onclick='editPlan(${JSON.stringify(p).replace(/'/g,"&#39;")})'>编辑</button>
+            <button class="btn btn--ghost btn--sm" style="color:var(--accent-red)" onclick="delPlan(${p.id},'${p.label}')">删除</button>
+          </td>
+        </tr>
+      `).join('')}</tbody></table>`;
+    }
+
+    function openPlanForm() {
+      document.getElementById('plan-form-title').textContent = '添加套餐';
+      document.getElementById('plan-edit-id').value = '';
+      document.getElementById('plan-label').value = '';
+      document.getElementById('plan-points').value = '';
+      document.getElementById('plan-price').value = '';
+      document.getElementById('plan-bonus').value = '0';
+      document.getElementById('plan-popular').value = '0';
+      document.getElementById('plan-modal').classList.add('active');
+    }
+
+    function editPlan(p) {
+      document.getElementById('plan-form-title').textContent = '编辑套餐';
+      document.getElementById('plan-edit-id').value = p.id;
+      document.getElementById('plan-label').value = p.label;
+      document.getElementById('plan-points').value = p.points;
+      document.getElementById('plan-price').value = p.price;
+      document.getElementById('plan-bonus').value = p.bonus || 0;
+      document.getElementById('plan-popular').value = p.popular ? '1' : '0';
+      document.getElementById('plan-modal').classList.add('active');
+    }
+
+    async function savePlan() {
+      const editId = document.getElementById('plan-edit-id').value;
+      const body = {
+        label: document.getElementById('plan-label').value.trim(),
+        points: document.getElementById('plan-points').value,
+        price: document.getElementById('plan-price').value,
+        bonus: document.getElementById('plan-bonus').value,
+        popular: document.getElementById('plan-popular').value === '1',
+      };
+      if (!body.label || !body.points || !body.price) { alert('请填写完整'); return; }
+      const url = editId ? `/plans/${editId}` : '/plans';
+      const method = editId ? 'PUT' : 'POST';
+      const r = await adminApi(url, { method, body: JSON.stringify(body) });
+      if (r && r.success) { document.getElementById('plan-modal').classList.remove('active'); loadPlansAdmin(); }
+      else alert(r?.error || '操作失败');
+    }
+
+    async function delPlan(id, label) {
+      if (!(await Club.confirm({ title: '删除套餐', message: `确认删除套餐「${label}」？`, confirmText: '删除', type: 'danger' }))) return;
+      const r = await adminApi(`/plans/${id}`, { method: 'DELETE' });
+      if (r && r.success) loadPlansAdmin();
+      else alert(r?.error || '操作失败');
+    }
+
+    // Update initTabs to load new panels
+    const origInitTabs = initTabs;
+    initTabs = function() {
+      origInitTabs();
+      // Override to add new tab loading
+      document.querySelectorAll('#main-tabs .admin-tab').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('#main-tabs .admin-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+          const t = tab.dataset.tab;
+          if (t === 'review') loadReview(1);
+          if (t === 'orders') loadOrders();
+          if (t === 'users') loadUsers();
+          if (t === 'admins') loadAdmins();
+          if (t === 'categories') loadCatsAdmin();
+          if (t === 'plans') loadPlansAdmin();
+          if (t === 'forum') loadForumPosts(1);
+          if (t === 'reports') loadReports(1);
+        };
+      });
+    };
+  </script>
+</body>
+</html>

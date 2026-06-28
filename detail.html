@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源详情 — 鼎脉人脉</title>
+  <link rel="icon" type="image/png" href="assets/icons8-teapot-material-outlined-32.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .detail-page {
+      padding-top: calc(var(--nav-height) + var(--space-2xl));
+      padding-bottom: var(--space-4xl);
+      position: relative;
+      z-index: 1;
+    }
+
+    .detail-layout {
+      display: flex;
+      gap: var(--space-2xl);
+      align-items: flex-start;
+    }
+
+    .detail-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .detail-sidebar {
+      width: 360px;
+      flex-shrink: 0;
+      position: sticky;
+      top: calc(var(--nav-height) + var(--space-xl));
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xl);
+    }
+
+    .breadcrumb a {
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--gold);
+    }
+
+    .breadcrumb__sep {
+      color: var(--text-dim);
+    }
+
+    /* Detail Header */
+    .detail-header {
+      margin-bottom: var(--space-2xl);
+    }
+
+    .detail-header__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+
+    .detail-header__title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .detail-header__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .detail-header__meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detail-header__meta svg {
+      width: 16px;
+      height: 16px;
+      opacity: 0.6;
+    }
+
+    .detail-header__tags {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    /* Detail Card */
+    .detail-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--space-xl);
+    }
+
+    .detail-card__header {
+      padding: var(--space-lg) var(--space-xl);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .detail-card__header-icon {
+      width: 8px;
+      height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+    }
+
+    .detail-card__header-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .detail-card__body {
+      padding: var(--space-xl);
+    }
+
+    /* Intro section */
+    .detail-intro {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.9;
+    }
+    .detail-intro img {
+      max-width: 100%;
+      border-radius: var(--radius-md);
+      margin: var(--space-md) 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    /* Contact — locked state */
+    .contact-locked { display: none; }
+    .contact-locked.active { display: block; }
+
+    .locked-box {
+      background: linear-gradient(135deg, rgba(201,169,110,0.05), rgba(201,169,110,0.02));
+      border: 1px solid rgba(201, 169, 110, 0.12);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2xl) var(--space-xl);
+    }
+
+    .locked-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2xl);
+      margin-bottom: var(--space-xl);
+      flex-wrap: wrap;
+    }
+
+    .locked-stat {
+      text-align: center;
+    }
+
+    .locked-stat__label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .locked-stat__value {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .locked-stat__value--sub {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-weight: 500;
+    }
+
+    .locked-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+    }
+
+    .locked-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .locked-bottom__hint {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* Contact — unlocked state */
+    .contact-unlocked { display: none; }
+    .contact-unlocked.active { display: block; }
+
+    .contact-content {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      line-height: 2.2;
+      color: var(--text-secondary);
+      white-space: pre-line;
+      animation: fadeInUp 0.5s var(--ease-out);
+    }
+
+    .unlock-success-badge {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: var(--bg-elevated);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl) var(--space-2xl);
+      text-align: center;
+      z-index: 3000;
+      box-shadow: var(--shadow-gold);
+      animation: badgePop 1.5s var(--ease-spring) forwards;
+    }
+
+    @keyframes badgePop {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      30% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1); }
+      80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    }
+
+    .unlock-success-badge__icon {
+      font-size: 48px;
+      margin-bottom: var(--space-md);
+    }
+
+    .unlock-success-badge__text {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .unlock-success-badge__sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: var(--space-xs);
+    }
+
+    /* Sidebar card */
+    .price-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .price-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark));
+    }
+
+    .price-card__label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-sm);
+    }
+
+    .price-card__value {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: var(--space-xs);
+    }
+
+    .price-card__unit {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xl);
+    }
+
+    .price-card__balance {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md);
+      background: var(--bg-glass-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .price-card__balance-value {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .price-card__btn {
+      width: 100%;
+      margin-bottom: var(--space-md);
+    }
+
+    .price-card__hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .price-card__hint a {
+      color: var(--gold);
+    }
+
+    /* Related resources */
+    .related-card {
+      cursor: pointer;
+      padding: var(--space-lg);
+    }
+
+    .related-card__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-xs);
+      transition: color 0.3s;
+    }
+
+    .related-card:hover .related-card__title {
+      color: var(--gold);
+    }
+
+    .related-card__meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    @media (max-width: 1024px) {
+      .detail-layout { flex-direction: column; }
+      .detail-sidebar { width: 100%; position: static; order: -1; margin-bottom: var(--space-xl); }
+    }
+
+    @media (max-width: 768px) {
+      .post-page { padding-top: calc(var(--nav-height) + var(--space-lg)); }
+      .detail-header__title { font-size: 22px; }
+      .detail-header__meta { flex-wrap: wrap; gap: var(--space-sm); }
+      .detail-card { padding: var(--space-lg); }
+      .detail-card__body { padding: var(--space-md); }
+      .locked-top { flex-direction: column; gap: var(--space-lg); }
+      .locked-divider { width: 40px; height: 1px; }
+      .locked-box { padding: var(--space-lg); }
+      .locked-stat__value { font-size: 28px; }
+      .breadcrumb { font-size: 12px; }
+    }
+
+    /* Confirm modal */
+    .confirm-modal .modal {
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .confirm-modal__icon {
+      font-size: 48px;
+      margin-bottom: var(--space-lg);
+    }
+
+    .confirm-modal__title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: var(--space-md);
+    }
+
+    .confirm-modal__desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-lg);
+      line-height: 1.7;
+    }
+
+    .confirm-modal__cost {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: var(--space-xl);
+    }
+
+    .confirm-modal__actions {
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .confirm-modal__actions .btn {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="detail-page">
+    <div class="container">
+      <!-- Breadcrumb -->
+      <div class="breadcrumb animate-fade-in">
+        <a href="index.html">首页</a>
+        <span class="breadcrumb__sep">/</span>
+        <a href="list.html">资源库</a>
+        <span class="breadcrumb__sep">/</span>
+        <span id="breadcrumb-title" style="color: var(--text-secondary)">资源详情</span>
+      </div>
+
+      <div class="detail-layout">
+        <!-- Main Content -->
+        <div class="detail-main">
+          <!-- Header -->
+          <div class="detail-header animate-fade-in-up">
+            <div class="detail-header__top">
+              <h1 class="detail-header__title" id="detail-title" style="flex:1"></h1>
+              <button class="btn btn--ghost btn--sm" id="fav-btn" onclick="toggleFav()" style="flex-shrink:0" title="收藏">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="detail-header__meta" id="detail-meta"></div>
+            <div class="detail-header__tags mt-lg" id="detail-tags"></div>
+          </div>
+
+          <!-- Intro Card -->
+          <div class="detail-card animate-fade-in-up delay-2">
+            <div class="detail-card__header">
+              <div class="detail-card__header-icon"></div>
+              <span class="detail-card__header-title">资源介绍</span>
+            </div>
+            <div class="detail-card__body">
+              <div class="detail-intro" id="detail-intro"></div>
+            </div>
+          </div>
+
+          <!-- Contact Card -->
+          <div class="detail-card animate-fade-in-up delay-3" id="contact-card">
+            <div class="detail-card__header">
+              <div class="detail-card__header-icon"></div>
+              <span class="detail-card__header-title">联系方式</span>
+            </div>
+            <div class="detail-card__body">
+              <!-- Locked State -->
+              <div class="contact-locked active" id="contact-locked">
+                <div class="locked-box">
+                  <div class="locked-top">
+                    <div class="locked-stat">
+                      <div class="locked-stat__label">解锁价格</div>
+                      <div class="locked-stat__value" id="lock-price">0</div>
+                    </div>
+                    <div class="locked-divider"></div>
+                    <div class="locked-stat">
+                      <div class="locked-stat__label">我的积分</div>
+                      <div class="locked-stat__value locked-stat__value--sub" id="lock-balance">0</div>
+                    </div>
+                  </div>
+                  <div class="locked-bottom">
+                    <button class="btn btn--primary btn--lg" id="unlock-btn" onclick="showConfirmModal()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      解锁查看联系方式
+                    </button>
+                    <div class="locked-bottom__hint">解锁后可永久查看，不重复收费</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Unlocked State -->
+              <div class="contact-unlocked" id="contact-unlocked">
+                <div class="contact-content" id="contact-content"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="detail-sidebar">
+          <!-- Price Card -->
+          <div class="price-card animate-slide-in-left delay-1">
+            <div class="price-card__label">解锁价格</div>
+            <div class="price-card__value" id="price-value">0</div>
+            <div class="price-card__unit">积分 / 次查看</div>
+
+            <div class="price-card__balance">
+              <span>我的积分</span>
+              <span class="price-card__balance-value" id="my-points">0</span>
+            </div>
+
+            <button class="btn btn--primary btn--block price-card__btn" id="sidebar-unlock-btn" onclick="showConfirmModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              解锁查看联系方式
+            </button>
+            <div class="price-card__hint">
+              积分不足？<a href="user.html">前往充值</a>
+            </div>
+          </div>
+
+          <!-- Related Resources -->
+          <div class="sidebar-card mt-lg animate-slide-in-left delay-3">
+            <h3 class="sidebar-card__title">相关资源</h3>
+            <div id="related-resources"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-overlay confirm-modal" id="confirm-modal">
+    <div class="modal">
+      <div class="confirm-modal__icon">🔓</div>
+      <div class="confirm-modal__title">确认解锁</div>
+      <div class="confirm-modal__desc">
+        即将消耗积分查看完整联系方式，解锁后可在「个人中心 - 已查看记录」中随时回看。
+      </div>
+      <div class="confirm-modal__cost">
+        <span class="coin-icon">$</span>
+        <span id="confirm-price">0</span>
+        <span style="font-size:16px; font-weight:400; color:var(--text-muted); font-family:var(--font-body)">积分</span>
+      </div>
+      <div class="confirm-modal__actions">
+        <button class="btn btn--ghost" onclick="closeConfirmModal()">取消</button>
+        <button class="btn btn--primary" id="confirm-unlock-btn" onclick="doUnlock()">确认解锁</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    (async () => {
+    await Club.initPage('list');
+
+    const resourceId = Club.getParam('id');
+    let resource;
+    let isUnlocked = false;
+
+    try {
+      resource = await api.resources.get(resourceId);
+    } catch (e) {
+      resource = null;
+    }
+
+    if (!resource || resource.error) {
+      document.querySelector('.container').innerHTML = `
+        <div class="empty-state" style="padding-top: 200px">
+          <div class="empty-state__icon">😕</div>
+          <div class="empty-state__text">资源不存在或已被删除</div>
+          <a href="list.html" class="btn btn--primary mt-lg">返回资源库</a>
+        </div>
+      `;
+      return;
+    }
+
+    isUnlocked = resource.isUnlocked;
+
+    // 真实浏览计数
+    fetch(`/api/resources/${resource.id}/view`, { method: 'POST' }).then(r => r.json()).then(d => {
+      if (d.views) {
+        const viewsEl = document.querySelector('#detail-meta span:nth-child(3)');
+        if (viewsEl) viewsEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${Club.formatNumber(d.views)} 次查看`;
+      }
+    }).catch(() => {});
+
+    // Render page
+    document.title = `${resource.title} — 鼎脉人脉`;
+    document.getElementById('breadcrumb-title').textContent = resource.title;
+    document.getElementById('detail-title').textContent = resource.title;
+    // 支持 HTML 内容（图片等）
+    document.getElementById('detail-intro').innerHTML = resource.intro;
+    document.getElementById('contact-content').textContent = resource.contact || '（未解锁）';
+    document.getElementById('lock-price').textContent = resource.price;
+    document.getElementById('price-value').textContent = resource.price;
+    document.getElementById('confirm-price').textContent = resource.price;
+
+    // Meta
+    document.getElementById('detail-meta').innerHTML = `
+      <span class="badge badge--gold">${Club.getCategoryIcon(resource.category)} ${Club.getCategoryName(resource.category)}</span>
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${resource.region}
+      </span>
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        ${Club.formatNumber(resource.views)} 次查看
+      </span>
+      ${resource.unlockCount ? `<span style="color:var(--gold)">🔥 ${resource.unlockCount}人已解锁</span>` : ''}
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ${resource.createdAt}
+      </span>
+    `;
+
+    // Tags
+    document.getElementById('detail-tags').innerHTML = resource.tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+    // Update points display
+    function updatePointsDisplay() {
+      const pts = Club.auth.getUserPoints();
+      document.getElementById('my-points').textContent = pts;
+      document.getElementById('lock-balance').textContent = pts;
+      const navPts = document.getElementById('nav-points');
+      if (navPts) navPts.textContent = pts;
+    }
+    updatePointsDisplay();
+
+    // Unlock state
+    if (isUnlocked) {
+      showUnlocked();
+    }
+
+    function showUnlocked() {
+      document.getElementById('contact-locked').classList.remove('active');
+      document.getElementById('contact-unlocked').classList.add('active');
+      document.getElementById('sidebar-unlock-btn').textContent = '✓ 已解锁';
+      document.getElementById('sidebar-unlock-btn').disabled = true;
+      isUnlocked = true;
+    }
+
+    // Confirm modal
+    // 收藏功能
+    let isFavorited = false;
+
+    (async () => {
+      if (!api.auth.isLoggedIn()) return;
+      try {
+        const data = await api.user.checkFavorite(resource.id);
+        isFavorited = data.favorited;
+        updateFavBtn();
+      } catch (e) {}
+    })();
+
+    function updateFavBtn() {
+      const btn = document.getElementById('fav-btn');
+      if (isFavorited) {
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--gold)" stroke="var(--gold)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+        btn.title = '取消收藏';
+      } else {
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+        btn.title = '收藏';
+      }
+    }
+
+    window.toggleFav = async function() {
+      if (!api.auth.isLoggedIn()) {
+        Club.toast('请先登录', 'info');
+        setTimeout(() => window.location.href = 'login.html', 1000);
+        return;
+      }
+      try {
+        const result = await api.user.toggleFavorite(resource.id);
+        isFavorited = result.favorited;
+        updateFavBtn();
+        Club.toast(isFavorited ? '已收藏' : '已取消收藏', 'success');
+      } catch (e) {
+        Club.toast('操作失败', 'error');
+      }
+    };
+
+    window.showConfirmModal = function() {
+      if (!Club.auth.isLoggedIn()) {
+        Club.toast('请先登录后再操作', 'info');
+        setTimeout(() => window.location.href = 'login.html', 1000);
+        return;
+      }
+      if (isUnlocked) return;
+
+      const pts = Club.auth.getUserPoints();
+      if (pts < resource.price) {
+        Club.toast('积分不足，请先充值', 'error');
+        setTimeout(() => window.location.href = 'user.html', 1500);
+        return;
+      }
+
+      document.getElementById('confirm-modal').classList.add('active');
+    };
+
+    window.closeConfirmModal = function() {
+      document.getElementById('confirm-modal').classList.remove('active');
+    };
+
+    // Unlock action（调用后端原子接口）
+    window.doUnlock = async function() {
+      if (!Club.auth.isLoggedIn()) return;
+      closeConfirmModal();
+
+      const btn = document.getElementById('confirm-unlock-btn');
+      btn.disabled = true;
+
+      try {
+        const result = await api.resources.unlock(resource.id);
+
+        // Coin burst effect
+        const priceEl = document.getElementById('price-value');
+        const rect = priceEl.getBoundingClientRect();
+        Club.coinBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, 20);
+
+        // Show unlock success badge
+        const badge = document.createElement('div');
+        badge.className = 'unlock-success-badge';
+        badge.innerHTML = `
+          <div class="unlock-success-badge__icon">🎉</div>
+          <div class="unlock-success-badge__text">解锁成功！</div>
+          <div class="unlock-success-badge__sub">消耗 ${resource.price} 积分</div>
+        `;
+        document.body.appendChild(badge);
+        setTimeout(() => badge.remove(), 2000);
+
+        // Update contact content with real data from server
+        document.getElementById('contact-content').textContent = result.contact;
+        updatePointsDisplay();
+
+        // Animate unlock
+        setTimeout(() => {
+          showUnlocked();
+          Club.toast('联系方式已解锁，可在个人中心查看记录', 'success');
+        }, 500);
+
+      } catch (err) {
+        if (err.code === 'INSUFFICIENT_POINTS') {
+          Club.toast('积分不足，请先充值', 'error');
+          setTimeout(() => window.location.href = 'user.html', 1500);
+        } else {
+          Club.toast(err.message || '解锁失败，请稍后重试', 'error');
+        }
+        btn.disabled = false;
+      }
+    };
+
+    // Related resources
+    (async () => {
+      try {
+        const relatedData = await api.resources.list({ category: resource.category, limit: 6 });
+        const related = relatedData.resources.filter(r => r.id !== resource.id).slice(0, 5);
+        document.getElementById('related-resources').innerHTML = related.length
+          ? related.map(r => `
+            <div class="card related-card" onclick="window.location.href='detail.html?id=${r.id}'">
+              <div class="related-card__title">${r.title}</div>
+              <div class="related-card__meta">
+                <span>${r.price} 积分</span>
+                <span>${Club.formatNumber(r.views)} 次查看</span>
+              </div>
+            </div>
+          `).join('')
+          : '<p style="font-size:13px; color:var(--text-dim); padding: var(--space-md) 0;">暂无相关资源</p>';
+      } catch (e) {}
+    })();
+
+    })(); // end async
+  </script>
+</body>
+</html>

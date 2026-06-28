@@ -1,0 +1,332 @@
+/* ═══════════════════════════════════════════════
+   多主题配色方案
+   ═══════════════════════════════════════════════ */
+
+/* 主题按钮（导航栏内） */
+.theme-nav-btn {
+  position: relative;
+}
+
+.theme-nav-trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-glass-light);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s var(--ease-out);
+}
+
+.theme-nav-trigger:hover {
+  border-color: var(--gold);
+  transform: scale(1.1);
+  background: var(--gold-glow);
+}
+
+/* 主题面板（下拉） */
+.theme-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1100;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-elevated);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: all 0.25s var(--ease-out);
+  min-width: 180px;
+}
+
+.theme-panel.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.theme-panel__title {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.theme-option:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.theme-option.active {
+  color: var(--gold);
+  background: var(--gold-glow);
+}
+
+.theme-option__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.theme-option.active .theme-option__dot {
+  border-color: var(--gold);
+}
+
+/* 无导航栏时的固定位置 */
+.theme-nav-btn[style*="position: fixed"] .theme-panel {
+  top: calc(100% + 8px);
+  right: 0;
+}
+
+/* ═══ 暗金主题（默认）═══ */
+:root, [data-theme="dark-gold"] {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: #161616;
+  --bg-card-hover: #1a1a1a;
+  --bg-elevated: #1e1e1e;
+  --bg-glass: rgba(22, 22, 22, 0.75);
+  --bg-glass-light: rgba(255, 255, 255, 0.03);
+  --gold: #c9a96e;
+  --gold-light: #dfc08a;
+  --gold-dark: #a88b4a;
+  --gold-glow: rgba(201, 169, 110, 0.15);
+  --gold-glow-strong: rgba(201, 169, 110, 0.3);
+  --text-primary: #f5f0e8;
+  --text-secondary: #a09888;
+  --text-muted: #6b6155;
+  --text-dim: #4a4238;
+  --accent-red: #c45c4f;
+  --accent-green: #6baa75;
+  --accent-blue: #5b8fb9;
+  --border: rgba(201, 169, 110, 0.12);
+  --border-hover: rgba(201, 169, 110, 0.3);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 8px 48px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 4px 32px rgba(201, 169, 110, 0.15);
+}
+
+/* ═══ 深蓝主题 ═══ */
+[data-theme="ocean-blue"] {
+  --bg-primary: #0b0e14;
+  --bg-secondary: #0f1318;
+  --bg-card: #141921;
+  --bg-card-hover: #1a2030;
+  --bg-elevated: #1e2533;
+  --bg-glass: rgba(20, 25, 33, 0.85);
+  --bg-glass-light: rgba(91, 155, 213, 0.04);
+  --gold: #5b9bd5;
+  --gold-light: #7db8e8;
+  --gold-dark: #3a7cc0;
+  --gold-glow: rgba(91, 155, 213, 0.15);
+  --gold-glow-strong: rgba(91, 155, 213, 0.3);
+  --text-primary: #e8edf5;
+  --text-secondary: #8899aa;
+  --text-muted: #556677;
+  --text-dim: #3d4f60;
+  --accent-red: #e06070;
+  --accent-green: #5cc9a7;
+  --accent-blue: #5b9bd5;
+  --border: rgba(91, 155, 213, 0.12);
+  --border-hover: rgba(91, 155, 213, 0.3);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 8px 48px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 4px 32px rgba(91, 155, 213, 0.15);
+}
+
+/* ═══ 翡翠绿主题 ═══ */
+[data-theme="emerald-green"] {
+  --bg-primary: #0a0f0c;
+  --bg-secondary: #0e1410;
+  --bg-card: #131c16;
+  --bg-card-hover: #18231c;
+  --bg-elevated: #1d2b22;
+  --bg-glass: rgba(19, 28, 22, 0.85);
+  --bg-glass-light: rgba(92, 184, 122, 0.04);
+  --gold: #5cb87a;
+  --gold-light: #7dd49a;
+  --gold-dark: #3a9a5c;
+  --gold-glow: rgba(92, 184, 122, 0.15);
+  --gold-glow-strong: rgba(92, 184, 122, 0.3);
+  --text-primary: #e8f5ec;
+  --text-secondary: #8aaa95;
+  --text-muted: #5a7766;
+  --text-dim: #3d5a48;
+  --accent-red: #d46a6a;
+  --accent-green: #5cb87a;
+  --accent-blue: #5b9bb5;
+  --border: rgba(92, 184, 122, 0.12);
+  --border-hover: rgba(92, 184, 122, 0.3);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 8px 48px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 4px 32px rgba(92, 184, 122, 0.15);
+}
+
+/* ═══ 紫罗兰主题 ═══ */
+[data-theme="violet-dream"] {
+  --bg-primary: #0d0a12;
+  --bg-secondary: #12101a;
+  --bg-card: #18142a;
+  --bg-card-hover: #1f1a35;
+  --bg-elevated: #252040;
+  --bg-glass: rgba(24, 20, 42, 0.85);
+  --bg-glass-light: rgba(176, 122, 216, 0.04);
+  --gold: #b07ad8;
+  --gold-light: #c89ae8;
+  --gold-dark: #9060c0;
+  --gold-glow: rgba(176, 122, 216, 0.15);
+  --gold-glow-strong: rgba(176, 122, 216, 0.3);
+  --text-primary: #f0e8f5;
+  --text-secondary: #9a88aa;
+  --text-muted: #6a5a77;
+  --text-dim: #4a3d5a;
+  --accent-red: #d86a8a;
+  --accent-green: #6ab88a;
+  --accent-blue: #7a8ad8;
+  --border: rgba(176, 122, 216, 0.12);
+  --border-hover: rgba(176, 122, 216, 0.3);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 8px 48px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 4px 32px rgba(176, 122, 216, 0.15);
+}
+
+/* ═══ 亮白主题 ═══ */
+[data-theme="light-clean"] {
+  --bg-primary: #f8f7f4;
+  --bg-secondary: #f0eeea;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafaf8;
+  --bg-elevated: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-glass-light: rgba(0, 0, 0, 0.02);
+  --gold: #b8860b;
+  --gold-light: #d4a843;
+  --gold-dark: #8b6508;
+  --gold-glow: rgba(184, 134, 11, 0.1);
+  --gold-glow-strong: rgba(184, 134, 11, 0.2);
+  --text-primary: #1a1a1a;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --text-dim: #bbbbbb;
+  --accent-red: #d94f4f;
+  --accent-green: #2e8b57;
+  --accent-blue: #2a7ab5;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-gold: 0 4px 20px rgba(184, 134, 11, 0.08);
+}
+
+/* 亮白主题特殊覆盖 */
+[data-theme="light-clean"] body::before {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(184, 134, 11, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(184, 134, 11, 0.02) 0%, transparent 50%);
+}
+
+[data-theme="light-clean"] body::after {
+  opacity: 0.015;
+}
+
+[data-theme="light-clean"] ::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
+
+[data-theme="light-clean"] ::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+[data-theme="light-clean"] .nav {
+  background: rgba(248, 247, 244, 0.9);
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light-clean"] .nav.scrolled {
+  background: rgba(248, 247, 244, 0.98);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light-clean"] .nav__title {
+  color: #1a1a1a;
+}
+
+[data-theme="light-clean"] .nav__link {
+  color: #666;
+}
+
+[data-theme="light-clean"] .nav__link:hover,
+[data-theme="light-clean"] .nav__link.active {
+  color: #1a1a1a;
+}
+
+[data-theme="light-clean"] .nav__link::after {
+  background: #b8860b;
+}
+
+[data-theme="light-clean"] .nav__avatar {
+  background: linear-gradient(135deg, #b8860b, #d4a843);
+}
+
+[data-theme="light-clean"] .modal {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light-clean"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light-clean"] .btn--ghost {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #555;
+}
+
+[data-theme="light-clean"] .btn--ghost:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1a1a1a;
+}
+
+[data-theme="light-clean"] .theme-nav-trigger {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light-clean"] .theme-nav-trigger:hover {
+  background: rgba(184, 134, 11, 0.08);
+}
+
+[data-theme="light-clean"] .user-dropdown {
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light-clean"] .user-dropdown__item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
