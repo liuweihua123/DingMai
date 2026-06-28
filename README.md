@@ -43,7 +43,7 @@
 ![用户中心](docs/screenshots/06-user.png)
 
 ### 💳 积分充值
-![积分充值](docs/screenshots/07-points.png?v=2)
+![积分充值](docs/screenshots/07-points.png?v=3)
 
 ### 📝 发布资源
 ![发布资源](docs/screenshots/08-publish.png?v=2)
