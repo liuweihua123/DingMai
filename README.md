@@ -20,27 +20,36 @@
 | 💬 社区论坛 | 技术交流、资源对接、吐槽灌水、新手求助 |
 | 📝 发布资源 | 所见即所得发布，支持图片上传与富文本编辑 |
 | 👤 用户中心 | 等级积分、VIP 会员、资源管理、动态消息 |
+| 💳 积分充值 | 多档套餐，支付宝 / 微信支付 |
 | 🔐 后台管理 | 用户管理、内容审核、系统配置、数据统计 |
-| 💳 在线支付 | 支付宝 / 微信支付，自动开通 VIP |
 
 ---
 
 ## 📸 界面预览
 
-### 首页
+### 🏠 首页
 ![首页](docs/screenshots/01-home.png)
 
-### 人脉资源
+### 📋 人脉资源
 ![人脉资源](docs/screenshots/02-resources.png)
 
-### 社区论坛
+### 💬 社区论坛
 ![社区论坛](docs/screenshots/03-forum.png)
 
-### 登录注册
+### 🔐 登录注册
 ![登录注册](docs/screenshots/04-login.png)
 
-### 发布资源
-![发布资源](docs/screenshots/05-publish.png)
+### 👤 用户中心
+![用户中心](docs/screenshots/06-user.png)
+
+### 💳 积分充值
+![积分充值](docs/screenshots/07-points.png)
+
+### 📝 发布资源
+![发布资源](docs/screenshots/08-publish.png)
+
+### ⚙️ 后台管理
+![后台管理](docs/screenshots/09-admin.png)
 
 ---
 
@@ -98,31 +107,31 @@ npm run dev   # 自动重启（Node.js --watch）
 ## 📁 项目结构
 
 ```
-├── index.html          # 首页
-├── list.html           # 人脉资源列表
-├── forum.html          # 社区论坛
-├── login.html          # 登录注册
-├── publish.html        # 发布资源
-├── user.html           # 用户中心
-├── admin.html          # 后台管理
-├── post.html           # 帖子详情
-├── detail.html         # 资源详情
-├── payment-result.html # 支付结果页
+├── index.html              # 首页
+├── list.html               # 人脉资源列表
+├── forum.html              # 社区论坛
+├── login.html              # 登录注册
+├── publish.html            # 发布资源
+├── user.html               # 用户中心
+├── admin.html              # 后台管理
+├── post.html               # 帖子详情
+├── detail.html             # 资源详情
+├── payment-result.html     # 支付结果页
 ├── css/
-│   ├── style.css       # 主样式
-│   └── themes.css      # 主题配色
+│   ├── style.css           # 主样式
+│   └── themes.css          # 主题配色
 ├── js/
-│   ├── api.js          # API 请求封装
-│   └── common.js       # 公共工具函数
+│   ├── api.js              # API 请求封装
+│   └── common.js           # 公共工具函数
 ├── server/
-│   ├── index.js        # Express 入口
-│   ├── db.js           # 数据库初始化
-│   ├── auth.js         # JWT 认证
-│   ├── alipay.js       # 支付宝配置（需自行配置）
+│   ├── index.js            # Express 入口
+│   ├── db.js               # 数据库初始化
+│   ├── auth.js             # JWT 认证
+│   ├── alipay.js           # 支付宝配置（需自行配置）
 │   ├── payment-config.example.js  # 支付配置示例
-│   ├── seed.js         # 种子数据
-│   └── routes/         # API 路由
-└── docs/screenshots/   # 项目截图
+│   ├── seed.js             # 种子数据
+│   └── routes/             # API 路由
+└── docs/screenshots/       # 项目截图
 ```
 
 ---
